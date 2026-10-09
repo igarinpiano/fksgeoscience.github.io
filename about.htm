@@ -1,222 +1,250 @@
-<!DOCTYPE htm>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
-    <link rel="shortcut icon" href="favicon.png">
     <meta charset="UTF-8">
-    <title>松本深志高校地学會のホームページ</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>地学會について | 松本深志高校地学會のホームページ</title>
+    <meta name="description" content="松本深志高校地学會の紹介。活動内容、活動日、天体ドームをはじめとする機材の一覧。">
+    <meta name="theme-color" content="#04060d">
+    <link rel="shortcut icon" href="favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Shippori+Mincho+B1:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css" type="text/css">
+    <script>document.documentElement.classList.add('js');</script>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NJ1BKL1EBQ"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-NJ1BKL1EBQ');
+    </script>
+    <script type="importmap">
+    { "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+    } }
+    </script>
+    <script type="module" src="./js/sky.js"></script>
+    <script defer src="./js/site.js"></script>
 </head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-NJ1BKL1EBQ"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-NJ1BKL1EBQ');
-</script>
 <body>
-    <hr>
-    <a href="./index.htm"><img src="./img/title.png" style="width:50vw;box-shadow"></a><br>
+    <canvas id="sky" aria-hidden="true"></canvas>
+    <div class="veil" aria-hidden="true"></div>
+    <div class="progress" aria-hidden="true"><i></i></div>
 
+    <header class="nav glass">
+        <a class="nav__brand" href="./index.htm"><img src="./favicon.png" alt=""><span>地学會</span></a>
+        <nav class="nav__links" aria-label="メインメニュー">
+            <a href="./index.htm">トップ</a>
+            <a href="./about.htm" aria-current="page">地学會について</a>
+            <a href="./result.htm">つくったもの</a>
+            <a href="./fes.htm">とんぼ祭</a>
+            <a href="./contact.htm">お問い合わせ</a>
+        </nav>
+    </header>
 
-    <hr>
-    <br><br>
+    <main>
+        <section class="hero hero--sub" data-shot="dome-hero">
+            <p class="eyebrow">About</p>
+            <h1 class="display"><span data-split>地学會について</span></h1>
+            <p class="hero__copy lead">松本深志高校地学會は、地学分野を広く扱う自然科学系の部活動です。</p>
+        </section>
 
-    <table id="border_table">
-        <tr>
-            <td style="padding:5px;text-align:center;"><a href="./index.htm">トップ</a></td>
-            <td style="padding:5px;text-align:center;"><a href="./about.htm">地学會について</a></td>
-            <td style="padding:5px;text-align:center;"><a href="./result.htm">つくったもの</a></td>
-            <td style="padding:5px;text-align:center;"><a href="./fes.htm">とんぼ祭</a></td>
-            <td style="padding:5px;text-align:center;"><a href="./contact.htm">お問い合わせ</a></td>
-        </tr>
-        <tr>
-            <td style="padding:5px;" colspan="6"><nobr style="display:inline;"><i><table id="noborder_table" cellspacing="0" cellpadding="0"><tbody><tr><td>あなたは<td><a href="https://ctr.stylemap.co.jp/"><img src="https://www.f-counter.net/ani1/67/1776341783/" alt="無料アクセスカウンター" border="0" style="margin:0px; padding:0px; border:0px; vertical-align:bottom"></a></td><td><a href="https://ctr.stylemap.co.jp/"><img src="https://www.f-counter.net/ani2/67/1776341783/" alt="無料アクセスカウンター" border="0" style="margin:0px; padding:0px; border:0px; vertical-align:bottom"></a></td><td>人目のお客様です</td></tr></tbody></table></nobr></i></td>
+        <div class="column">
 
+            <section class="glass window" data-tilt data-reveal data-shot="island-r">
+                <h2>アカウントリスト</h2>
+                <div class="tiles">
+                    <a class="tile" href="https://x.com/fks_geoscience" target="_blank" rel="noopener"><small>X</small><b>Twitter(X)</b><span>@fks_geoscience</span></a>
+                    <a class="tile" href="https://www.instagram.com/fukashi_geoscience" target="_blank" rel="noopener"><small>IG</small><b>Instagram</b><span>@fukashi_geoscience</span></a>
+                    <a class="tile" href="https://github.com/fksgeoscience" target="_blank" rel="noopener"><small>GH</small><b>GitHub</b><span>fksgeoscience</span></a>
+                </div>
+            </section>
 
-        </tr>
-    </table>
-    </div>
-
-    <br><br>
-    <u><i style="font-weight:900; font-size:35px">　地学會について　</i></u><br><br>
-
-    <div style="width:90vw; display:flex;align-items: flex-start;margin:auto;">
-        <div style="border:1px solid #fff; width:20%; text-align: center; background-color:#013e3d;">
-            <img src="./img/multi_cof.gif" style="width:90%" border="1px">
-            <p style="font-weight:700;font-size:20px">松本深志高校地学會のホームページです。</p>
-            <hr>
-            <!--<img src="./img/under_const.png" style="width:90%" border="1px">-->
-            <hr>
-            <p style="background-color:#013e3d; border:1px solid #fff; padding:5px; margin-top:0px;" class="yellow"><img src="./img/star.png">　地学會とは？　</p>
-            <div style="text-align:left;">
-                <p>松本深志高校地学會は、地学分野を広く扱う自然科学系の部活動です。</p>
-            </div>
-            <p style="background-color:#013e3d; border:1px solid #fff; padding:5px; margin-top:0px;" class="yellow"><img src="./img/star.png">　なにをするところ？　</p>
-            <div style="text-align:left;">
-                <br>
-                <i>………さあ？　<u  style="font-size:15px;">　 26年度部長</u></i>
-                <br>
-                <br>
-            </div>
-            <hr>
-            <p class="yellow"><img src="./img/star.png">　詳しくは、「<a href="./about.htm">地学會について</a>」をご覧ください　</p>
-
-            <p style="background-color:#013e3d; border:1px solid #fff; padding:5px; margin-top:0px;" class="yellow"><img src="./img/star.png">　このページについて　</p>
-            <div style="text-align:left;">
-                <br>
-                <p>2026年4月に制作された「松本深志高校地学會のホームページ」です。<br>
-                固定された情報源のために制作されました。詳しくは、<a href="./doc/m45_2026_2.pdf#page=98" target="_blank" rel="noopener">26年部誌の97頁</a>をご覧ください。</p>
-                <br>
-            </div>
-            <hr>
-            
-        </div>
-
-        <div style="border:1px solid #fff; width:80%; text-align: center;">
-
-
-
-            <p style="background-color:#013e3d; border:1px solid #fff; padding:5px; margin-top:0px;" class="yellow">
-            <img src="./img/star.gif">　アカウントリスト　<img src="./img/star.gif"></p>
-            <div style="text-align:left;">
-                <a href="https://x.com/fks_geoscience"  target="_blank" rel="noopener">・Twitter(X)</a><br><br>
-                <a href="https://www.instagram.com/fukashi_geoscience" target="_blank" rel="noopener">・Instagram</a><br><br>
-                <a href="https://github.com/fksgeoscience" target="_blank" rel="noopener">・GitHub</a><br><br>
-            </div>
-
-            <p style="background-color:#013e3d; border:1px solid #fff; padding:5px; margin-top:0px;" class="yellow">
-            <img src="./img/star.gif">　地学會とは　<img src="./img/star.gif"></p>
-            <div style="text-align:left;">
-                <p class="yellow"><img src="./img/star.png">　松本深志高校地学會は、地学分野を広く扱う自然科学系の部活動です。</p>
+            <section class="glass window" id="about" data-tilt data-reveal data-shot="earth-r strata-r">
+                <h2>地学會とは</h2>
+                <p class="hl">松本深志高校地学會は、地学分野を広く扱う自然科学系の部活動です。</p>
                 <p>
                 天文/気象/地球/地質/鉱物/岩石/宇宙工学 など非常に幅広い分野が対象です。深志高校の科学系部活でもっとも担当範囲が広いと言えます。<br>
                 分野が広い分、活動がとても自由です。兼部する部員も多い傾向にあります。</p>
-                <p>特徴</p>
-                <ul>
+                <ul class="chips">
+                    <li>天文</li><li>気象</li><li>地球</li><li>地質</li><li>鉱物</li><li>岩石</li><li>宇宙工学</li>
+                </ul>
+                <h3>特徴</h3>
+                <ul class="bullets">
                     <li>豊富な機材・標本( とくに、天体ドーム関連の設備は県内有数 国内で見てもそんなに多くない )</li>
                     <li>長い歴史　戦前のものを含む古い資料が大量に残っている</li>
                     <li>活動の自由度が高い</li>
                 </ul>
-                <div style="display:inline-block; text-align:center;width:30%;">
-                    <img src="./img/gonzalez.jpg" style="width:90%;"/>
-                    <p style="font-size:17px;font-weight:900;">地学會公式マスコットキャラクター「ゴンザレス」<br>　</p>
+                <div class="mascots">
+                    <figure class="mascot">
+                        <img src="./img/gonzalez.jpg" alt="UFOのような帽子をかぶった白いキャラクター" loading="lazy" width="1080" height="1074">
+                        <figcaption>地学會公式マスコットキャラクター「ゴンザレス」</figcaption>
+                    </figure>
+                    <figure class="mascot">
+                        <img src="./img/a-chan.png" alt="双眼鏡を首から下げたキャラクター。吹き出しに「地学は、おもしろいよ！」" loading="lazy" width="591" height="585">
+                        <figcaption>マスコットキャラではないが、たまに姿を見せる<br>「地学会員Pちゃん(通称)」<br>
+                        詳細は<a href="./doc/m45_2026_2.pdf#page=99" target="_blank" rel="noopener">26年部誌の98頁</a></figcaption>
+                    </figure>
                 </div>
-                　　
-                <div style="display:inline-block; text-align:center; width:30%;">
-                    <img src="./img/a-chan.png" style="width:90%;"/>
-                    <p style="font-size:17px;font-weight:900;">マスコットキャラではないが、たまに姿を見せる<br>「地学会員Pちゃん(通称)」<br>
-                    詳細は<a href="./doc/m45_2026_2.pdf#page=99"style="font-size:17px;" target="_blank" rel="noopener">26年部誌の98頁</a></p>
-                </div>
-
-
                 <p>部費はありませんが、三年生への贈り物のため例年一人数百円程度の集金をしています。</p>
                 <p>
                 詳しい活動については、毎年発行している部誌をご覧ください。<a href="./result.htm#m45">つくったもの</a>にデジタル版があります。
                 </p>
-            </div>
-                <br>
-                <p class="yellow">学年を問わず、いつでも新入部員を募集しています！</p>
-                <br>
+            </section>
 
+            <p class="glass banner" data-reveal>学年を問わず、いつでも新入部員を募集しています！</p>
 
-            <p style="background-color:#013e3d; border:1px solid #fff; padding:5px; margin-top:0px;" class="yellow">
-            <img src="./img/star.gif">　活動内容　<img src="./img/star.gif"></p>
-            <div style="text-align:left;">
-                <p class="yellow"><img src="./img/star.png">　地学會での活動は、基本的には任意参加です！</p>
-                <br>
-                <table>
-                    <tr>
-                        <td>活動場所：</td>
-                        <td>本校2棟4階地学教室</td>
-                    </tr>
-                    <tr>
-                        <td>基本活動日：</td>
-                        <td>毎週 火曜・金曜</td>
-                    </tr>
-                </table>
+            <section class="glass window" id="activity" data-tilt data-reveal data-shot="strata-r crystal-r">
+                <h2>活動内容</h2>
+                <p class="hl">地学會での活動は、基本的には任意参加です！</p>
+                <div class="tiles">
+                    <div class="tile"><small>活動場所</small><b>本校2棟4階地学教室</b></div>
+                    <div class="tile"><small>基本活動日</small><b>毎週 火曜・金曜</b></div>
+                </div>
 
-                <p class="yellow"><img src="./img/star.png"> 全体で行っている活動</p>
-                <p style="text-indent:1rem;">・ <strong>小旅行</strong>　・・・　日帰りで旅行をします。旅行先は地質系から宇宙工学系と、例年さまざまです。</p>
-                <p style="text-indent:1rem;">・ <strong>流星群観測会</strong>　・・・　流星群がある時期に、学校に泊まり込みをして観測をします。記録用紙を用いた眼視観測を主に行っています。電波観測の機材もありますが、未だ運用に成功していません。</p>
-                <p style="text-indent:1rem;">・ <strong>黒点観測</strong>　・・・　当番制で、毎日太陽黒点のスケッチを昼休みに行います。</p>
-                <p style="text-indent:1rem;">・ <strong>とんぼ祭</strong>　・・・　とんぼ祭に向けて、プラネタリウムの練習や部誌の執筆などを行います。</p>
+                <h3>全体で行っている活動</h3>
+                <dl class="spec">
+                    <div><dt>小旅行</dt><dd>日帰りで旅行をします。旅行先は地質系から宇宙工学系と、例年さまざまです。</dd></div>
+                    <div><dt>流星群観測会</dt><dd>流星群がある時期に、学校に泊まり込みをして観測をします。記録用紙を用いた眼視観測を主に行っています。電波観測の機材もありますが、未だ運用に成功していません。</dd></div>
+                    <div><dt>黒点観測</dt><dd>当番制で、毎日太陽黒点のスケッチを昼休みに行います。</dd></div>
+                    <div><dt>とんぼ祭</dt><dd>とんぼ祭に向けて、プラネタリウムの練習や部誌の執筆などを行います。</dd></div>
+                </dl>
 
-                <p class="yellow"><img src="./img/star.png"> 個人で行っている活動(例)</p>
-                <p style="text-indent:1rem;">・ <strong>いろんな研究</strong>　・・・　地学系の幅広い分野での研究があります。部誌だけでなく、ポスターセッションなどで発表することもあります。深志高校の「探求活動」とテーマを等しくしている人も見られます。</p>
-                <p style="text-indent:1rem;">・ <strong>天体の観望・観測</strong>　・・・　地学會の機材を使って、部活を延長して観望・観測を行うこともあります。彗星や月食などの天文現象を対象とすることが多いです。</p>
-                <p style="text-indent:1rem;">・ <strong>資料の整理</strong>　・・・　地学會に眠っている膨大な資料(標本や観測記録など)を整理する人もいます。当時の雰囲気が感じられるものもあり、けっこう楽しいですよ！貴重な資料もあり、整理は学術的にも価値があります。資料整理は偉業。</p>
-            </div>
+                <h3>個人で行っている活動(例)</h3>
+                <dl class="spec">
+                    <div><dt>いろんな研究</dt><dd>地学系の幅広い分野での研究があります。部誌だけでなく、ポスターセッションなどで発表することもあります。深志高校の「探求活動」とテーマを等しくしている人も見られます。</dd></div>
+                    <div><dt>天体の観望・観測</dt><dd>地学會の機材を使って、部活を延長して観望・観測を行うこともあります。彗星や月食などの天文現象を対象とすることが多いです。</dd></div>
+                    <div><dt>資料の整理</dt><dd>地学會に眠っている膨大な資料(標本や観測記録など)を整理する人もいます。当時の雰囲気が感じられるものもあり、けっこう楽しいですよ！貴重な資料もあり、整理は学術的にも価値があります。資料整理は偉業。</dd></div>
+                </dl>
+            </section>
 
-            <p style="background-color:#013e3d; border:1px solid #fff; padding:5px; margin-top:0px;" class="yellow">
-            <img src="./img/star.gif">　機材　<img src="./img/star.gif"></p>
-            <div style="text-align:left;">
-                <p class="yellow"><img src="./img/star.png">　地学會にはたくさんの高価な天文機材があります！</p>
-                <br>
+            <section class="glass window" id="equipment" data-tilt data-reveal data-shot="dome-r crt-close">
+                <h2>機材</h2>
+                <p class="hl">地学會にはたくさんの高価な天文機材があります！</p>
 
-                <p class="yellow"><img src="./img/star.png"> 天体ドーム(約直径5 m)　　
-                <a href="./img/dome2.jpg" target="_blank" rel="noopener">写真1</a> 
-                <a href="./img/dome3.jpg" target="_blank" rel="noopener">写真2</a> 
-                <a href="./img/dome4.jpg" target="_blank" rel="noopener">写真3</a> 
-                </p>
-                <p style="text-indent:1rem;">・ <strong>タカハシ FCT-150</strong>　・・・　三枚玉フローライトの15cm屈折。地学會最大の、「主砲」です。</p>
-                <p style="text-indent:1rem;">・ <strong>タカハシ FSQ-106</strong>　・・・　四枚玉フローライトの11cm屈折。かなり光学性能がいいらしいです。イメージセンサを撮り付けてよく使います</p>
-                <p style="text-indent:1rem;">・ <strong>タカハシ EM500 Temma500</strong>　・・・　非常にしっかりとした赤道儀です。固定されているので、極軸もブレません。Temma500は謎です。</p>
-                <p style="text-indent:1rem;">・ <strong>タカハシ 計算機</strong>　・・・　Windows98が入っています。BITRANのCCDを動かすときに使います。ステライメージ3とか過去の資料があります…CRTモニタのリフレッシュレートが低すぎて見にくい…ちなみにHPの左側の「マルチな部活」gifはこのマシンのスクーンセーバーを模倣しています</p>
-                <p style="text-indent:1rem;">・ <strong>計算機2</strong>　・・・　こっちはちょっと新しめで、WindowsXPが入っています！ステライメージ3とステラナビゲータ ver.8があります。自動導入にも使えるみたいです。</p>
-                <p style="text-indent:1rem;">・ <strong>計算機3</strong>　・・・　これにはなんとWindows10が入っています。電波観測用のソフトと、ZWOのASI系カメラを動かすソフトが入っています。</p>
+                <h3>天体ドーム(約直径5 m)
+                    <span class="btns">
+                        <a class="btn btn--sm btn--photo" href="./img/dome2.jpg" target="_blank" rel="noopener">写真1</a>
+                        <a class="btn btn--sm btn--photo" href="./img/dome3.jpg" target="_blank" rel="noopener">写真2</a>
+                        <a class="btn btn--sm btn--photo" href="./img/dome4.jpg" target="_blank" rel="noopener">写真3</a>
+                    </span>
+                </h3>
+                <dl class="spec">
+                    <div><dt>タカハシ FCT-150</dt><dd>三枚玉フローライトの15cm屈折。地学會最大の、「主砲」です。</dd></div>
+                    <div><dt>タカハシ FSQ-106</dt><dd>四枚玉フローライトの11cm屈折。かなり光学性能がいいらしいです。イメージセンサを撮り付けてよく使います</dd></div>
+                    <div><dt>タカハシ EM500 Temma500</dt><dd>非常にしっかりとした赤道儀です。固定されているので、極軸もブレません。Temma500は謎です。</dd></div>
+                    <div><dt>タカハシ 計算機</dt><dd>Windows98が入っています。BITRANのCCDを動かすときに使います。ステライメージ3とか過去の資料があります…CRTモニタのリフレッシュレートが低すぎて見にくい…ちなみにトップページの「マルチな部活」gifはこのマシンのスクーンセーバーを模倣しています</dd></div>
+                    <div><dt>計算機2</dt><dd>こっちはちょっと新しめで、WindowsXPが入っています！ステライメージ3とステラナビゲータ ver.8があります。自動導入にも使えるみたいです。</dd></div>
+                    <div><dt>計算機3</dt><dd>これにはなんとWindows10が入っています。電波観測用のソフトと、ZWOのASI系カメラを動かすソフトが入っています。</dd></div>
+                </dl>
+            </section>
 
-                <p class="yellow"><img src="./img/star.png"> 鏡筒(持ち出し可)　　<a href="./img/sd81s.jpg" target="_blank" rel="noopener">SD81S</a> <a href="./img/ds-115.jpg" target="_blank" rel="noopener">DS-115</a></p>
-                <p style="text-indent:1rem;">・ <strong>Vixen SD81S</strong>　・・・　運びやすい上に80cmの集光力を得られるので重宝しています。小島よしおのサイン付きです</p>
-                <p style="text-indent:1rem;">・ <strong>Vixen A62SS</strong>　・・・　超コンパクト鏡筒です。「写真用」って感じですかね…あんまり使っている部員は見ません</p>
-                <p style="text-indent:1rem;">・ <strong>MEADE DS-115</strong>　・・・　24年度卒の先輩から寄贈いただきました。主鏡の状態がよろしくなく、メンテナンスが必要そうです。</p>
+            <section class="glass window" data-tilt data-reveal data-shot="scope-r island-r">
+                <h3>鏡筒(持ち出し可)
+                    <span class="btns">
+                        <a class="btn btn--sm btn--photo" href="./img/sd81s.jpg" target="_blank" rel="noopener">SD81S</a>
+                        <a class="btn btn--sm btn--photo" href="./img/ds-115.jpg" target="_blank" rel="noopener">DS-115</a>
+                    </span>
+                </h3>
+                <dl class="spec">
+                    <div><dt>Vixen SD81S</dt><dd>運びやすい上に80cmの集光力を得られるので重宝しています。小島よしおのサイン付きです</dd></div>
+                    <div><dt>Vixen A62SS</dt><dd>超コンパクト鏡筒です。「写真用」って感じですかね…あんまり使っている部員は見ません</dd></div>
+                    <div><dt>MEADE DS-115</dt><dd>24年度卒の先輩から寄贈いただきました。主鏡の状態がよろしくなく、メンテナンスが必要そうです。</dd></div>
+                </dl>
 
-                <p class="yellow"><img src="./img/star.png"> 赤道儀(持ち出し可)</p>
-                <p style="text-indent:1rem;">・ <strong>Vixen SX2</strong>　・・・　これを持ち帰るのはオススメしません！という重さです。松本駅まで持っていくので大仕事ですよ…ただそれだけあって安定感はあります。なお、電源ケーブル紛失中につき、電動駆動ができません！</p>
-                <p style="text-indent:1rem;">・ <strong>Vixen AP-WL</strong>　・・・　軽い！といっても鏡筒よりずっと重いですが、これならそこそこ気軽に運べます。この赤道儀とSD81Sの組はなかなか優秀だと思います。乾電池でも動くのが素晴しい</p>
+                <h3>赤道儀(持ち出し可)</h3>
+                <dl class="spec">
+                    <div><dt>Vixen SX2</dt><dd>これを持ち帰るのはオススメしません！という重さです。松本駅まで持っていくので大仕事ですよ…ただそれだけあって安定感はあります。なお、電源ケーブル紛失中につき、電動駆動ができません！</dd></div>
+                    <div><dt>Vixen AP-WL</dt><dd>軽い！といっても鏡筒よりずっと重いですが、これならそこそこ気軽に運べます。この赤道儀とSD81Sの組はなかなか優秀だと思います。乾電池でも動くのが素晴しい</dd></div>
+                </dl>
 
-                <p class="yellow"><img src="./img/star.png"> 三脚(持ち出し可)</p>
-                <p style="text-indent:1rem;">・ <strong>Vixen SCG-HAL130</strong>　・・・　そこそこ重いです。SX2を使わない限り出番はないかな…</p>
-                <p style="text-indent:1rem;">・ <strong>Vixen APP-TL130</strong>　・・・　軽くていいです！AP-WLにちょうどいい感じです</p>
+                <h3>三脚(持ち出し可)</h3>
+                <dl class="spec">
+                    <div><dt>Vixen SCG-HAL130</dt><dd>そこそこ重いです。SX2を使わない限り出番はないかな…</dd></div>
+                    <div><dt>Vixen APP-TL130</dt><dd>軽くていいです！AP-WLにちょうどいい感じです</dd></div>
+                </dl>
+            </section>
 
-                <p class="yellow"><img src="./img/star.png"> その他　　<a href="./img/fukasis.jpg" target="_blank" rel="noopener">FUKASIS</a></p> 
-                <p style="text-indent:1rem;">・ <strong>Vixen XPスポットファインダー</strong>　・・・　いわゆる「レーザーサイト」です。調光もできて便利なんですが、すぐズレるのでちょっと使いづらいです(使いかたの問題？)。集光・拡大機能はないので、導入に慣れた人にはあんまり役に立たないかも</p>
-                <p style="text-indent:1rem;">・ <strong>自作 地学會可視光低分散分光器「FUKASIS」</strong>　・・・　分解能R~600の、ちょっと特殊な自作分光器です。詳しくは<a href="./result.htm#fukasis">ここ</a></p>
+            <section class="glass window" data-tilt data-reveal data-shot="prism-r">
+                <h3>その他
+                    <span class="btns">
+                        <a class="btn btn--sm btn--photo" href="./img/fukasis.jpg" target="_blank" rel="noopener">FUKASIS</a>
+                    </span>
+                </h3>
+                <dl class="spec">
+                    <div><dt>Vixen XPスポットファインダー</dt><dd>いわゆる「レーザーサイト」です。調光もできて便利なんですが、すぐズレるのでちょっと使いづらいです(使いかたの問題？)。集光・拡大機能はないので、導入に慣れた人にはあんまり役に立たないかも</dd></div>
+                    <div><dt>自作 地学會可視光低分散分光器「FUKASIS」</dt><dd>分解能R~600の、ちょっと特殊な自作分光器です。詳しくは<a href="./result.htm#fukasis">ここ</a></dd></div>
+                </dl>
 
-                <p class="yellow"><img src="./img/star.png"> 双眼鏡　　<a href="./img/7-50.jpg" target="_blank" rel="noopener">五藤7×50</a> <a href="./img/10-70.jpg" target="_blank" rel="noopener">タカハシ10×70</a></p> 
-                <p style="text-indent:1rem;">・ <strong>五藤光学 7×50 7.1°</strong>　・・・　天体用として非常にバランスがよく光学性能も申し分ない、素晴しい双眼鏡です。天体を探すのに便利です</p>
-                <p style="text-indent:1rem;">・ <strong>タカハシ 10×70</strong>　・・・　デカいです。とても携帯できる重さではありません。いろんなところがガタついています。しかし、双眼鏡としての性能は保たれていて、高倍率が欲しいときに使ったりします。</p>
-                <p style="text-indent:1rem;">・ <strong>Nikon MONARCH 8×42</strong>　・・・　たぶんけっこういいやつです。とにかく使うときのストレスが少なくて非常に快適です。観望に適しているかもしれません</p>
+                <h3>双眼鏡
+                    <span class="btns">
+                        <a class="btn btn--sm btn--photo" href="./img/7-50.jpg" target="_blank" rel="noopener">五藤7×50</a>
+                        <a class="btn btn--sm btn--photo" href="./img/10-70.jpg" target="_blank" rel="noopener">タカハシ10×70</a>
+                    </span>
+                </h3>
+                <dl class="spec">
+                    <div><dt>五藤光学 7×50 7.1°</dt><dd>天体用として非常にバランスがよく光学性能も申し分ない、素晴しい双眼鏡です。天体を探すのに便利です</dd></div>
+                    <div><dt>タカハシ 10×70</dt><dd>デカいです。とても携帯できる重さではありません。いろんなところがガタついています。しかし、双眼鏡としての性能は保たれていて、高倍率が欲しいときに使ったりします。</dd></div>
+                    <div><dt>Nikon MONARCH 8×42</dt><dd>たぶんけっこういいやつです。とにかく使うときのストレスが少なくて非常に快適です。観望に適しているかもしれません</dd></div>
+                </dl>
 
-                <p class="yellow"><img src="./img/star.png"> 接眼鏡　　</p> 
-                <p style="text-indent:1rem;">・ <strong>タカハシ LEシリーズ</strong>　・・・　コンパクトな接眼鏡です。アイポイントが高くてシャープでクリアで、さすがお高い接眼鏡という感じです。</p>
-                <p style="text-indent:1rem;">・ <strong>タカハシ LG5mm</strong>　・・・　十字のスケールがついています。用途は分かりません…</p>
-                <p style="text-indent:1rem;">・ <strong>Vixen SLV4mm, 15mm</strong>　・・・　LEと比べると大きいです。目をおおうカバーをくり出すことができ、とても快適な眼視体験ができます。光学性能もかなり良さそうに見えます</p>
-                <p style="text-indent:1rem;">・ <strong>Scopetech Ke25mm</strong>　・・・　分光器「FUKASIS」のコリメータ用の接眼鏡です。スリーブを外すと視野環が露出し、焦点面にアクセスできます。周辺像は普通な感じです</p>
+                <h3>接眼鏡</h3>
+                <dl class="spec">
+                    <div><dt>タカハシ LEシリーズ</dt><dd>コンパクトな接眼鏡です。アイポイントが高くてシャープでクリアで、さすがお高い接眼鏡という感じです。</dd></div>
+                    <div><dt>タカハシ LG5mm</dt><dd>十字のスケールがついています。用途は分かりません…</dd></div>
+                    <div><dt>Vixen SLV4mm, 15mm</dt><dd>LEと比べると大きいです。目をおおうカバーをくり出すことができ、とても快適な眼視体験ができます。光学性能もかなり良さそうに見えます</dd></div>
+                    <div><dt>Scopetech Ke25mm</dt><dd>分光器「FUKASIS」のコリメータ用の接眼鏡です。スリーブを外すと視野環が露出し、焦点面にアクセスできます。周辺像は普通な感じです</dd></div>
+                </dl>
+            </section>
 
-                <p class="yellow"><img src="./img/star.png"> イメージセンサ　　<a href="./img/bj-30l.jpg" target="_blank" rel="noopener">BJ-30L</a> <a href="./img/c10-4m.jpg" target="_blank" rel="noopener">C10-4M</a> <a href="./img/asi678mc.jpg" target="_blank" rel="noopener">ASI678MC</a> </p>
-                <p style="text-indent:1rem;">・ <strong>BITRAN BJ-30L</strong>　・・・　冷却モノクロCCDです。2000年付近にこれで銀河など撮影していたようです。昔は松本も空が暗かったんだなぁ</p>
-                <p style="text-indent:1rem;">・ <strong>Vixen C10-4M</strong>　・・・　非冷却のカラーCCDです。ビデオ撮影ができます。掩蔽などの観測に便利そうです</p>
-                <p style="text-indent:1rem;">・ <strong>ZWO ASI678MC</strong>　・・・　非冷却のカラーCMOSです。天体写真を撮るのに使えます。FCT-150(FL=1050mm)に直焦点するとかなり視野が狭くなります。惑星とかに使うんですかね…？ちなみにFL=2.5mmの魚眼レンズ(ねじ込み式)がついていて、それを使うと対角魚眼になりほぼ全天を撮影できます</p>
+            <section class="glass window" data-tilt data-reveal data-shot="crt-r far">
+                <h3>イメージセンサ
+                    <span class="btns">
+                        <a class="btn btn--sm btn--photo" href="./img/bj-30l.jpg" target="_blank" rel="noopener">BJ-30L</a>
+                        <a class="btn btn--sm btn--photo" href="./img/c10-4m.jpg" target="_blank" rel="noopener">C10-4M</a>
+                        <a class="btn btn--sm btn--photo" href="./img/asi678mc.jpg" target="_blank" rel="noopener">ASI678MC</a>
+                    </span>
+                </h3>
+                <dl class="spec">
+                    <div><dt>BITRAN BJ-30L</dt><dd>冷却モノクロCCDです。2000年付近にこれで銀河など撮影していたようです。昔は松本も空が暗かったんだなぁ</dd></div>
+                    <div><dt>Vixen C10-4M</dt><dd>非冷却のカラーCCDです。ビデオ撮影ができます。掩蔽などの観測に便利そうです</dd></div>
+                    <div><dt>ZWO ASI678MC</dt><dd>非冷却のカラーCMOSです。天体写真を撮るのに使えます。FCT-150(FL=1050mm)に直焦点するとかなり視野が狭くなります。惑星とかに使うんですかね…？ちなみにFL=2.5mmの魚眼レンズ(ねじ込み式)がついていて、それを使うと対角魚眼になりほぼ全天を撮影できます</dd></div>
+                </dl>
 
-                <p class="yellow"><img src="./img/star.png"> ソフトウェア　　</p>
-                <p style="text-indent:1rem;">・ <strong>ステライメージ3</strong>　・・・　もうずいぶん前のですが…いまならフリーソフトで代用できるのではとは薄々思っています</p>
-                <p style="text-indent:1rem;">・ <strong>ステラナビゲータ ver.5</strong></p>
-                <p style="text-indent:1rem;">・ <strong>ステラナビゲータ ver.8</strong>　・・・　自動導入をするときに使います。が、2026年現在自動導入がうまくいかないという問題に直面していて、正直にいうと使っていません…</p>
-
-            </div>
-
+                <h3>ソフトウェア</h3>
+                <dl class="spec">
+                    <div><dt>ステライメージ3</dt><dd>もうずいぶん前のですが…いまならフリーソフトで代用できるのではとは薄々思っています</dd></div>
+                    <div><dt>ステラナビゲータ ver.5</dt></div>
+                    <div><dt>ステラナビゲータ ver.8</dt><dd>自動導入をするときに使います。が、2026年現在自動導入がうまくいかないという問題に直面していて、正直にいうと使っていません…</dd></div>
+                </dl>
+            </section>
 
         </div>
-    </div>
-    <br><br>
+    </main>
 
-    <hr>
-        <p>since 2026-04-15</p>
-
-        <p>================</p>
-        <p>Copyright © 2026 松本深志高等学校地学會</p>
+    <footer class="footer">
+        <div class="footer__inner glass" data-reveal>
+            <div>
+                <h2>地学會とは？</h2>
+                <p>松本深志高校地学會は、地学分野を広く扱う自然科学系の部活動です。</p>
+                <p>なにをするところ？　<i>………さあ？</i>　<small>26年度部長</small></p>
+            </div>
+            <div>
+                <h2>このページについて</h2>
+                <p>2026年4月に制作された「松本深志高校地学會のホームページ」です。<br>
+                固定された情報源のために制作されました。詳しくは、<a href="./doc/m45_2026_2.pdf#page=98" target="_blank" rel="noopener">26年部誌の97頁</a>をご覧ください。</p>
+            </div>
+            <div>
+                <h2>VISITOR</h2>
+                <p class="counter">あなたは<a href="https://ctr.stylemap.co.jp/"><img src="https://www.f-counter.net/ani1/67/1776341783/" alt="無料アクセスカウンター"></a><a href="https://ctr.stylemap.co.jp/"><img src="https://www.f-counter.net/ani2/67/1776341783/" alt="無料アクセスカウンター"></a>人目のお客様です</p>
+                <p class="footer__meta"><span>since 2026-04-15</span><span>Copyright © 2026 松本深志高等学校地学會</span></p>
+            </div>
+        </div>
+    </footer>
 
 </body>
 </html>

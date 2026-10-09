@@ -1,113 +1,206 @@
-<!DOCTYPE htm>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
-    <link rel="shortcut icon" href="favicon.png">
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>松本深志高校地学會のホームページ</title>
+    <meta name="description" content="松本深志高校地学會は、天文・気象・地球・地質・鉱物・岩石・宇宙工学まで、地学分野を広く扱う自然科学系の部活動です。">
+    <meta name="theme-color" content="#04060d">
+    <link rel="shortcut icon" href="favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Shippori+Mincho+B1:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css" type="text/css">
+    <script>document.documentElement.classList.add('js');</script>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NJ1BKL1EBQ"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-NJ1BKL1EBQ');
+    </script>
+    <script type="importmap">
+    { "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+    } }
+    </script>
+    <script type="module" src="./js/sky.js"></script>
+    <script defer src="./js/site.js"></script>
 </head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-NJ1BKL1EBQ"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-NJ1BKL1EBQ');
-</script>
 <body>
-    <hr>
-    <a href="./index.htm"><img src="./img/title.png" style="width:50vw;box-shadow"></a><br>
+    <canvas id="sky" aria-hidden="true"></canvas>
+    <div class="veil" aria-hidden="true"></div>
+    <div class="progress" aria-hidden="true"><i></i></div>
 
+    <header class="nav glass">
+        <a class="nav__brand" href="./index.htm"><img src="./favicon.png" alt=""><span>地学會</span></a>
+        <nav class="nav__links" aria-label="メインメニュー">
+            <a href="./index.htm" aria-current="page">トップ</a>
+            <a href="./about.htm">地学會について</a>
+            <a href="./result.htm">つくったもの</a>
+            <a href="./fes.htm">とんぼ祭</a>
+            <a href="./contact.htm">お問い合わせ</a>
+        </nav>
+    </header>
 
-    <hr>
-    <br><br>
+    <main>
+        <section class="hero" data-shot="earth-hero">
+            <p class="eyebrow">Matsumoto Fukashi High School — Geoscience Club</p>
+            <h1 class="display"><span data-split>地学會</span><small>松本深志高校地学會のホームページ</small></h1>
+            <p class="hero__copy lead">松本深志高校地学會のホームページです。<br>地学は、おもしろいよ！</p>
+            <p class="hero__scroll">SCROLL — 地球から、M45まで</p>
+        </section>
 
-    <table id="border_table">
-        <tr>
-            <td style="padding:5px;text-align:center;"><a href="./index.htm">トップ</a></td>
-            <td style="padding:5px;text-align:center;"><a href="./about.htm">地学會について</a></td>
-            <td style="padding:5px;text-align:center;"><a href="./result.htm">つくったもの</a></td>
-            <td style="padding:5px;text-align:center;"><a href="./fes.htm">とんぼ祭</a></td>
-            <td style="padding:5px;text-align:center;"><a href="./contact.htm">お問い合わせ</a></td>
-        </tr>
-        <tr>
-            <td style="padding:5px;" colspan="6"><nobr style="display:inline;"><i><table id="noborder_table" cellspacing="0" cellpadding="0"><tbody><tr><td>あなたは<td><a href="https://ctr.stylemap.co.jp/"><img src="https://www.f-counter.net/ani1/67/1776341783/" alt="無料アクセスカウンター" border="0" style="margin:0px; padding:0px; border:0px; vertical-align:bottom"></a></td><td><a href="https://ctr.stylemap.co.jp/"><img src="https://www.f-counter.net/ani2/67/1776341783/" alt="無料アクセスカウンター" border="0" style="margin:0px; padding:0px; border:0px; vertical-align:bottom"></a></td><td>人目のお客様です</td></tr></tbody></table></nobr></i></td>
+        <!-- いらっしゃいませ -->
+        <section class="stage stage--center" data-shot="earth-rise">
+            <article class="glass card intro" data-tilt data-reveal>
+                <figure class="photo"><img src="./img/dome.png" alt="天体ドームの内部。望遠鏡と計算機が並んでいる。「地学會には機材がたくさん！いつでも部員をお待ちしております」" width="980" height="744"></figure>
+                <div class="card" style="padding:0">
+                    <p class="eyebrow">いらっしゃいませ！</p>
+                    <h3>地学會とは？</h3>
+                    <p>松本深志高校地学會は、地学分野を広く扱う自然科学系の部活動です。</p>
+                    <h3>なにをするところ？</h3>
+                    <blockquote class="quote">………さあ？</blockquote>
+                    <cite>26年度部長</cite>
+                    <p>詳しくは、「<a href="./about.htm">地学會について</a>」をご覧ください</p>
+                </div>
+            </article>
+        </section>
 
+        <!-- 01 -->
+        <section class="stage stage--right" data-shot="earth-limb">
+            <article class="glass card" data-tilt data-reveal="right">
+                <p class="card__no"><b>01</b>地球・気象</p>
+                <h2>まずは、この星から。</h2>
+                <p>頭の上の大気から、足の下の岩盤まで。天文・気象・地球・地質・鉱物・岩石・宇宙工学など、非常に幅広い分野が対象です。深志高校の科学系部活でもっとも担当範囲が広いと言えます。</p>
+                <ul class="chips">
+                    <li>天文</li><li>気象</li><li>地球</li><li>地質</li><li>鉱物</li><li>岩石</li><li>宇宙工学</li>
+                </ul>
+            </article>
+        </section>
 
-        </tr>
-    </table>
-    </div>
+        <!-- 02 -->
+        <section class="stage" data-shot="strata">
+            <article class="glass card" data-tilt data-reveal="left">
+                <p class="card__no"><b>02</b>地質・鉱物・岩石</p>
+                <h2>足もとには、気の遠くなる時間。</h2>
+                <p>地学教室には豊富な標本と、戦前のものを含む古い資料が大量に眠っています。当時の雰囲気が感じられるものもあり、整理はけっこう楽しいですよ！学術的にも価値があります。資料整理は偉業。</p>
+                <ul class="chips">
+                    <li>立体地形図</li><li>鉱物・岩石展示</li><li>小旅行</li>
+                </ul>
+                <div class="btns"><a class="btn" href="./about.htm#activity">活動内容</a></div>
+            </article>
+        </section>
 
-    <br><br>
-    <u><i style="font-weight:900; font-size:35px">　トップ　</i></u><br><br>
+        <!-- 03 -->
+        <section class="stage stage--right" data-shot="dome">
+            <article class="glass card" data-tilt data-reveal="right">
+                <p class="card__no"><b>03</b>天文</p>
+                <h2>県内有数の、天体ドーム。</h2>
+                <p>直径約5 mのドームに、15cm屈折の「主砲」タカハシ FCT-150。流星群がある時期には学校に泊まり込みで観測をし、昼休みには当番制で毎日、太陽黒点をスケッチしています。</p>
+                <ul class="chips">
+                    <li>流星群観測会</li><li>黒点観測</li><li>天体の観望・観測</li>
+                </ul>
+                <div class="btns"><a class="btn" href="./about.htm#equipment">機材を見る</a></div>
+            </article>
+        </section>
 
-    <div style="width:90vw; display:flex;align-items: flex-start;margin:auto;">
-        <div style="border:1px solid #fff; width:20%; text-align: center; background-color:#013e3d;">
-            <img src="./img/multi_cof.gif" style="width:90%" border="1px">
-            <p style="font-weight:700;font-size:20px">松本深志高校地学會のホームページです。</p>
-            <hr>
-            <hr>
-            <p style="background-color:#013e3d; border:1px solid #fff; padding:5px; margin-top:0px;" class="yellow"><img src="./img/star.png">　地学會とは？　</p>
-            <div style="text-align:left;">
+        <!-- 04 -->
+        <section class="stage" data-shot="cansat">
+            <article class="glass card" data-tilt data-reveal="left">
+                <p class="card__no"><b>04</b>宇宙工学</p>
+                <h2>空き缶サイズの、人工衛星。</h2>
+                <p>缶サット Fks-A から Fks-B-II まで。リアクションホイールによる姿勢制御、地上との相互無線通信、太陽光発電。宇宙甲子園缶サット部門 全国大会で技術賞をいただきました！</p>
+                <ul class="chips">
+                    <li>3軸姿勢制御</li><li>自作基板</li><li>3Dプリンタ</li>
+                </ul>
+                <div class="btns"><a class="btn" href="./result.htm#fks-a">つくったもの</a></div>
+            </article>
+        </section>
+
+        <!-- 05 -->
+        <section class="stage stage--right" data-shot="crt">
+            <article class="glass card" data-tilt data-reveal="right">
+                <p class="card__no"><b>05</b>コンピュータ</p>
+                <h2>Windows 98、いまも現役。</h2>
+                <p>ドームの計算機は Windows 98 で冷却CCDを動かしています。その一方で、缶サットの地上局アプリやシミュレータ、スマホの中でスタック・ダーク減算・波長感度校正まで完結する分光器「FUKASIS」も自作しています。</p>
+                <div class="crt">
+                    <img src="./img/multi_cof.gif" alt="「マルチな部活」と表示されたスクリーンセーバー風のアニメーション" width="352" height="288" loading="lazy">
+                    <span>「マルチな部活」— ドームの Windows 98 機のスクリーンセーバーを模倣しています。</span>
+                </div>
+                <div class="btns"><a class="btn" href="./result.htm#fukasis">FUKASIS</a></div>
+            </article>
+        </section>
+
+        <!-- 06 -->
+        <section class="stage" data-shot="m45">
+            <article class="glass card" data-tilt data-reveal="left">
+                <p class="card__no"><b>06</b>部誌「M45」</p>
+                <h2>毎年一冊、プレアデスの名前で。</h2>
+                <p>毎年とんぼ祭で発行している部誌です！地学會や地学會員の1年間の活動がまとめられています。</p>
+                <div class="covers">
+                    <a href="./doc/m45_2025.pdf" target="_blank" rel="noopener"><img src="./img/m45_2025.png" alt="M45 2025年版の表紙" loading="lazy"></a>
+                    <a href="./doc/m45_2026.pdf" target="_blank" rel="noopener"><img src="./img/m45_2026.png" alt="M45 2026年版の表紙" loading="lazy"></a>
+                    <a href="./doc/m45_2026_2.pdf" target="_blank" rel="noopener"><img src="./img/m45_2026_2.png" alt="M45 2026年版(第2版)の表紙" loading="lazy"></a>
+                </div>
+                <div class="btns"><a class="btn" href="./result.htm#m45">デジタル版</a></div>
+            </article>
+        </section>
+
+        <!-- おしらせ -->
+        <section class="stage stage--center" data-shot="far">
+            <div class="split">
+                <article class="glass card" data-tilt data-reveal style="--i:0">
+                    <p class="eyebrow">おしらせ</p>
+                    <ul class="log">
+                        <li><time datetime="2026-07-29">2026/07/29</time><span class="hl">引き継ぎを行いました。</span></li>
+                        <!-- <li><time>日付</time><span class="hl">本文</span></li> でかく -->
+                    </ul>
+                    <hr class="rule">
+                    <p class="hl">学年を問わず、いつでも新入部員を募集しています！</p>
+                    <div class="btns">
+                        <a class="btn btn--star" href="./about.htm">地学會について</a>
+                        <a class="btn" href="./contact.htm">お問い合わせ</a>
+                    </div>
+                </article>
+                <article class="glass card" data-tilt data-reveal style="--i:1">
+                    <p class="eyebrow">最近の更新</p>
+                    <ul class="log">
+                        <li><time datetime="2026-10-10">2026/10/10</time><span>ホームページをリニューアルしました。</span></li>
+                        <li><time datetime="2026-07-29">2026/07/29</time><span>ホームページの整備が完了しました。</span></li>
+                        <li><time datetime="2026-06-06">2026/06/06</time><span>とんぼ祭特設ページを開設しました！</span></li>
+                        <li><time datetime="2026-04-19">2026/04/19</time><span>ホームページの画像を除く部分の整備が終了しました。</span></li>
+                        <li><time datetime="2026-04-15">2026/04/15</time><span>ホームページを開設しました！</span></li>
+                    </ul>
+                    <hr class="rule">
+                    <p>松本深志高校地学會です。</p>
+                </article>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="footer__inner glass" data-reveal>
+            <div>
+                <h2>地学會とは？</h2>
                 <p>松本深志高校地学會は、地学分野を広く扱う自然科学系の部活動です。</p>
+                <p>詳しくは、「<a href="./about.htm">地学會について</a>」をご覧ください</p>
             </div>
-            <p style="background-color:#013e3d; border:1px solid #fff; padding:5px; margin-top:0px;" class="yellow"><img src="./img/star.png">　なにをするところ？　</p>
-            <div style="text-align:left;">
-                <br>
-                <i>………さあ？　<u  style="font-size:15px;">　 26年度部長</u></i>
-                <br>
-                <br>
-            </div>
-            <hr>
-            <p class="yellow"><img src="./img/star.png">　詳しくは、「<a href="./about.htm">地学會について</a>」をご覧ください　</p>
-
-            <p style="background-color:#013e3d; border:1px solid #fff; padding:5px; margin-top:0px;" class="yellow"><img src="./img/star.png">　このページについて　</p>
-            <div style="text-align:left;">
-                <br>
+            <div>
+                <h2>このページについて</h2>
                 <p>2026年4月に制作された「松本深志高校地学會のホームページ」です。<br>
                 固定された情報源のために制作されました。詳しくは、<a href="./doc/m45_2026_2.pdf#page=98" target="_blank" rel="noopener">26年部誌の97頁</a>をご覧ください。</p>
-                <br>
             </div>
-            <hr>
-            
-        </div>
-
-
-        <div style="border:1px solid #fff; width:80%; text-align: center;">
-            <p style="background-color:#013e3d; border:1px solid #fff; padding:5px; margin-top:0px;" class="yellow">
-            <img src="./img/star.gif">　いらっしゃいませ！　<img src="./img/star.gif"></p>
-
-            <img src="./img/dome.png" style="width:30%"><br><br>
-
-
-            <p style="background-color:#013e3d; border:1px solid #fff; padding:5px; margin-top:0px;" class="yellow">
-            <img src="./img/star.gif">　おしらせ　<img src="./img/star.gif"></p>
-            <div style="text-align:left;">
-                <p class="yellow">2026/07/29: 引き継ぎを行いました。</p>
-                <!-- p class="yellow" でかく -->
-            </div>
-
-
-            <p style="background-color:#013e3d; border:1px solid #fff; padding:5px;" class="yellow"><img src="./img/star.gif">　最近の更新　<img src="./img/star.gif"></p>
-            <div style="text-align:left;">
-                <p class="yellow">2026/07/29: ホームページの整備が完了しました。</p>
-                <p class="yellow">2026/06/06: とんぼ祭特設ページを開設しました！</p>
-                <p class="yellow">2026/04/19: ホームページの画像を除く部分の整備が終了しました。</p>
-                <p class="yellow">2026/04/15: ホームページを開設しました！</p>
-            <hr>
-
-            <p> 松本深志高校地学會です。</p>
+            <div>
+                <h2>VISITOR</h2>
+                <p class="counter">あなたは<a href="https://ctr.stylemap.co.jp/"><img src="https://www.f-counter.net/ani1/67/1776341783/" alt="無料アクセスカウンター"></a><a href="https://ctr.stylemap.co.jp/"><img src="https://www.f-counter.net/ani2/67/1776341783/" alt="無料アクセスカウンター"></a>人目のお客様です</p>
+                <p class="footer__meta"><span>since 2026-04-15</span><span>Copyright © 2026 松本深志高等学校地学會</span></p>
             </div>
         </div>
-    </div>
-    <br><br>
-
-    <hr>
-        <p>since 2026-04-15</p>
-
-        <p>================</p>
-        <p>Copyright © 2026 松本深志高等学校地学會</p>
+    </footer>
 
     <script>
         console.log(" ");

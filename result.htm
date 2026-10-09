@@ -1,141 +1,104 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <link rel="shortcut icon" href="favicon.png">
     <meta charset="UTF-8">
-    <title>松本深志高校地学會のホームページ</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>つくったもの | 松本深志高校地学會のホームページ</title>
+    <meta name="description" content="松本深志高校地学會がつくったもの。部誌「M45」、可視光低分散分光器「FUKASIS」、缶サット Fks-A / Fks-B-I / Fks-B-II。">
+    <meta name="theme-color" content="#04060d">
+    <link rel="shortcut icon" href="favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Shippori+Mincho+B1:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css" type="text/css">
+    <script>document.documentElement.classList.add('js');</script>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NJ1BKL1EBQ"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-NJ1BKL1EBQ');
+    </script>
+    <script type="importmap">
+    { "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+    } }
+    </script>
+    <script type="module" src="./js/sky.js"></script>
+    <script defer src="./js/site.js"></script>
 </head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-NJ1BKL1EBQ"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-NJ1BKL1EBQ');
-</script>
 <body>
-    <hr>
-    <a href="./index.htm"><img src="./img/title.png" style="width:50vw;box-shadow"></a><br>
+    <canvas id="sky" aria-hidden="true"></canvas>
+    <div class="veil" aria-hidden="true"></div>
+    <div class="progress" aria-hidden="true"><i></i></div>
 
+    <header class="nav glass">
+        <a class="nav__brand" href="./index.htm"><img src="./favicon.png" alt=""><span>地学會</span></a>
+        <nav class="nav__links" aria-label="メインメニュー">
+            <a href="./index.htm">トップ</a>
+            <a href="./about.htm">地学會について</a>
+            <a href="./result.htm" aria-current="page">つくったもの</a>
+            <a href="./fes.htm">とんぼ祭</a>
+            <a href="./contact.htm">お問い合わせ</a>
+        </nav>
+    </header>
 
-    <hr>
-    <br><br>
+    <main>
+        <section class="hero hero--sub" data-shot="cansat-hero">
+            <p class="eyebrow">Works</p>
+            <h1 class="display"><span data-split>つくったもの</span></h1>
+            <p class="hero__copy lead">ホームページ開設時以降のもののみ掲載しています。</p>
+        </section>
 
-    <table id="border_table">
-        <tr>
-            <td style="padding:5px;text-align:center;"><a href="./index.htm">トップ</a></td>
-            <td style="padding:5px;text-align:center;"><a href="./about.htm">地学會について</a></td>
-            <td style="padding:5px;text-align:center;"><a href="./result.htm">つくったもの</a></td>
-            <td style="padding:5px;text-align:center;"><a href="./fes.htm">とんぼ祭</a></td>
-            <td style="padding:5px;text-align:center;"><a href="./contact.htm">お問い合わせ</a></td>
-        </tr>
-        <tr>
-            <td style="padding:5px;" colspan="6"><nobr style="display:inline;"><i><table id="noborder_table" cellspacing="0" cellpadding="0"><tbody><tr><td>あなたは<td><a href="https://ctr.stylemap.co.jp/"><img src="https://www.f-counter.net/ani1/67/1776341783/" alt="無料アクセスカウンター" border="0" style="margin:0px; padding:0px; border:0px; vertical-align:bottom"></a></td><td><a href="https://ctr.stylemap.co.jp/"><img src="https://www.f-counter.net/ani2/67/1776341783/" alt="無料アクセスカウンター" border="0" style="margin:0px; padding:0px; border:0px; vertical-align:bottom"></a></td><td>人目のお客様です</td></tr></tbody></table></nobr></i></td>
+        <div class="column">
 
-
-        </tr>
-    </table>
-    </div>
-
-    <br><br>
-    <u><i style="font-weight:900; font-size:35px">　つくったもの　</i></u><br><br>
-
-    <div style="width:90vw; display:flex;align-items: flex-start;margin:auto;">
-        <div style="border:1px solid #fff; width:20%; text-align: center; background-color:#013e3d;">
-            <img src="./img/multi_cof.gif" style="width:90%" border="1px">
-            <p style="font-weight:700;font-size:20px">松本深志高校地学會のホームページです。</p>
-            <hr>
-            <hr>
-            <p style="background-color:#013e3d; border:1px solid #fff; padding:5px; margin-top:0px;" class="yellow"><img src="./img/star.png">　地学會とは？　</p>
-            <div style="text-align:left;">
-                <p>松本深志高校地学會は、地学分野を広く扱う自然科学系の部活動です。</p>
-            </div>
-            <p style="background-color:#013e3d; border:1px solid #fff; padding:5px; margin-top:0px;" class="yellow"><img src="./img/star.png">　なにをするところ？　</p>
-            <div style="text-align:left;">
-                <br>
-                <i>………さあ？　<u  style="font-size:15px;">　 26年度部長</u></i>
-                <br>
-                <br>
-            </div>
-            <hr>
-            <p class="yellow"><img src="./img/star.png">　詳しくは、「<a href="./about.htm">地学會について</a>」をご覧ください　</p>
-
-            <p style="background-color:#013e3d; border:1px solid #fff; padding:5px; margin-top:0px;" class="yellow"><img src="./img/star.png">　このページについて　</p>
-            <div style="text-align:left;">
-                <br>
-                <p>2026年4月に制作された「松本深志高校地学會のホームページ」です。<br>
-                固定された情報源のために制作されました。詳しくは、<a href="./doc/m45_2026_2.pdf#page=98" target="_blank" rel="noopener">26年部誌の97頁</a>をご覧ください。</p>
-                <br>
-            </div>
-            <hr>
-            
-        </div>
-
-        <div style="border:1px solid #fff; width:80%; text-align: center;">
-            ホームページ開設時以降のもののみ掲載しています。
-
-            <p style="background-color:#013e3d; border:1px solid #fff; padding:5px; margin-top:0px;" class="yellow">
-            <img src="./img/star.gif">　地学會部誌「M45」　<img src="./img/star.gif"></p>
-            <p>2010 -- </p>
-            <div style="text-align:left;">
+            <section class="glass window" id="m45" data-tilt data-reveal data-shot="m45-r">
+                <h2>地学會部誌「M45」 <span class="mono">2010 --</span></h2>
                 <p>毎年とんぼ祭で発行している部誌です！地学會や地学會員の1年間の活動がまとめられています。<br>デジタル版があればここに掲載します</p>
+                <div class="books">
+                    <a class="book" href="./doc/m45_2025.pdf" target="_blank" rel="noopener">
+                        <span class="book__3d"><img src="./img/m45_2025.png" alt="M45 2025年版の表紙"></span>
+                        2025
+                    </a>
+                    <a class="book" href="./doc/m45_2026.pdf" target="_blank" rel="noopener">
+                        <span class="book__3d"><img src="./img/m45_2026.png" alt="M45 2026年版の表紙"></span>
+                        2026
+                    </a>
+                    <a class="book" href="./doc/m45_2026_2.pdf" target="_blank" rel="noopener">
+                        <span class="book__3d"><img src="./img/m45_2026_2.png" alt="M45 2026年版(第2版)の表紙"></span>
+                        2026(第2版)
+                    </a>
+                </div>
+            </section>
 
-                <a href="./doc/m45_2025.pdf"  target="_blank" rel="noopener"style="text-align:center;display:inline-block;width:11vw">
-                    <img src="./img/m45_2025.png" style="width:10vw"/><br>
-                    2025
-                </a>
-
-                <a href="./doc/m45_2026.pdf"  target="_blank" rel="noopener"style="text-align:center;display:inline-block;width:11vw">
-                    <img src="./img/m45_2026.png" style="width:10vw"/><br>
-                    2026
-                </a>
-
-                <a href="./doc/m45_2026_2.pdf"  target="_blank" rel="noopener"style="text-align:center;display:inline-block;width:11vw">
-                    <img src="./img/m45_2026_2.png" style="width:10vw"/><br>
-                    2026(第2版)
-                </a>
-
-            </div><br>
-
-
-            <p style="background-color:#013e3d; border:1px solid #fff; padding:5px; margin-top:0px;" class="yellow" id="fukasis">
-            <img src="./img/star.gif">　地学會 可視光低分散分光器「FUKASIS」　<img src="./img/star.gif"></p>
-            <p>2024 -- 2026</p>
-                <a href="./doc/29P_Poster_ItoK.pdf"  target="_blank" rel="noopener">ポスター(第28回天文学会ジュニアセッション)</a>
-                <a>　</a>
-                <a href="https://github.com/legrs/fukasis"  target="_blank" rel="noopener">GitHubのrepository</a>
-            <div style="text-align:left;">
+            <section class="glass window" id="fukasis" data-tilt data-reveal data-shot="prism-r">
+                <h2>地学會 可視光低分散分光器「FUKASIS」 <span class="mono">2024 -- 2026</span></h2>
+                <div class="btns">
+                    <a class="btn" href="./doc/29P_Poster_ItoK.pdf" target="_blank" rel="noopener">ポスター(第28回天文学会ジュニアセッション)</a>
+                    <a class="btn" href="https://github.com/legrs/fukasis" target="_blank" rel="noopener">GitHubのrepository</a>
+                </div>
                 <p>地学會にも分光器が欲しい！という考えから2024年の冬に開発を開始し、2026年3月に完成した分光器です。特徴は、</p>
-                <ul>
+                <ul class="bullets">
                     <li>約3万円で制作可能 オープンソース</li>
                     <li>最大波長分解能 R=600</li>
                     <li>スマホを撮像に使用し、スタック・ダーク減算・波長感度校正がその中で完結する</li>
                 </ul>
                 <p>です。この分光器に関するお問い合わせは<a href="https://x.com/legrs4073" target="_blank" rel="noopener">@legrs4073</a>まで</p>
-                <br>
-            </div><br>
+            </section>
 
-            <p style="background-color:#013e3d; border:1px solid #fff; padding:5px; margin-top:0px;" class="yellow" id="fukasis">
-            <img src="./img/star.gif">　缶サット Fks-A　<img src="./img/star.gif"></p>
-            <p>2024</p>
-                <a href="./img/fksa_body.jpg"  target="_blank" rel="noopener">機体の写真</a>
-                <a>　</a>
-                <a href="./img/fksa_rocket.jpg"  target="_blank" rel="noopener">ロケットの写真</a>
-            <div style="text-align:left;">
-                <br>
-                <table>
-                    <tr class="yellow">
-                        <td>ミッション：</td>
-                        <td>リアクションホイールによる2軸姿勢制御</td>
-                    </tr>
-                </table>
-                <br>
-                
+            <section class="glass window" id="fks-a" data-tilt data-reveal data-shot="cansat-a">
+                <h2>缶サット Fks-A <span class="mono">2024</span></h2>
+                <div class="btns">
+                    <a class="btn btn--sm btn--photo" href="./img/fksa_body.jpg" target="_blank" rel="noopener">機体の写真</a>
+                    <a class="btn btn--sm btn--photo" href="./img/fksa_rocket.jpg" target="_blank" rel="noopener">ロケットの写真</a>
+                </div>
+                <p class="mission"><small>ミッション：</small><b>リアクションホイールによる2軸姿勢制御</b></p>
                 <p>(おそらく)地学會初の缶サットです。<br>
                 電子工作自体が初ということもあり、なかなか大変な思いをしました。</p>
-                <ul>
+                <ul class="bullets">
                     <li>地獄のユニバーサル基板限界配線</li>
                     <li>データシートが見つからない謎電子部品</li>
                     <li>電圧を間違えて純正のArduino(4000円)を破壊</li>
@@ -145,26 +108,17 @@
                     <li>大会打ち上げではSDカードに記録ができていなかった</li>
                 </ul>
                 <p>興味があればぜひ2025年の「M45」もご覧ください！</p>
-            </div><br>
+            </section>
 
-            <p style="background-color:#013e3d; border:1px solid #fff; padding:5px; margin-top:0px;" class="yellow" id="fukasis">
-            <img src="./img/star.gif">　缶サット Fks-B-I　<img src="./img/star.gif"></p>
-            <p>2025</p>
-                <a href="./img/fksb_1_body.jpg"  target="_blank" rel="noopener">機体の写真</a>
-                <a>　</a>
-                <a href="./img/fksb_1_app.jpg"  target="_blank" rel="noopener">地上局の画面</a>
-            <div style="text-align:left;">
-                <br>
-                <table>
-                    <tr class="yellow">
-                        <td>ミッション：</td>
-                        <td>小型人工衛星向けの衛星バスの開発(3軸姿勢制御・地上との相互無線通信・など)</td>
-                    </tr>
-                </table>
-                <br>
-                
+            <section class="glass window" id="fks-b-1" data-tilt data-reveal data-shot="cansat-b">
+                <h2>缶サット Fks-B-I <span class="mono">2025</span></h2>
+                <div class="btns">
+                    <a class="btn btn--sm btn--photo" href="./img/fksb_1_body.jpg" target="_blank" rel="noopener">機体の写真</a>
+                    <a class="btn btn--sm btn--photo" href="./img/fksb_1_app.jpg" target="_blank" rel="noopener">地上局の画面</a>
+                </div>
+                <p class="mission"><small>ミッション：</small><b>小型人工衛星向けの衛星バスの開発(3軸姿勢制御・地上との相互無線通信・など)</b></p>
                 <p>2回目ということで、比較にならないぐらいクオリティが向上しました。</p>
-                <ul>
+                <ul class="bullets">
                     <li>Arduino MicroからTweliteマイコンに変更　処理能力向上・小型化・無線通信が可能に</li>
                     <li>JLCPCBのプリント基板にした</li>
                     <li>4万円の令和最新版3Dプリンタを導入　柱を除く構造のすべてを3dプリンタ製に</li>
@@ -177,30 +131,19 @@
                     <li>大会の2日前にラップトップが壊れる　一千円のジャンクPCで大会に参加する羽目に</li>
                 </ul>
                 <p>缶サット甲子園の岐阜地方大会で技術賞(三等)をいただき、全国大会への出場が決まりました。Fks-B-IIへと進みます。</p>
-            </div><br>
+            </section>
 
-            <p style="background-color:#013e3d; border:1px solid #fff; padding:5px; margin-top:0px;" class="yellow" id="fukasis">
-            <img src="./img/star.gif">　缶サット Fks-B-II　<img src="./img/star.gif"></p>
-            <p>2026</p>
-                <a href="./img/fksb_2_body.jpg"  target="_blank" rel="noopener">機体の写真</a>
-                <a>　</a>
-                <a href="./img/fksb_2_app1.jpg"  target="_blank" rel="noopener">地上局の画面1</a>
-                <a>　</a>
-                <a href="./img/fksb_2_app2.jpg"  target="_blank" rel="noopener">地上局の画面2</a>
-                <a>　</a>
-                <a href="./img/fksb_2_sim.jpg"  target="_blank" rel="noopener">シミュレータの画面</a>
-            <div style="text-align:left;">
-                <br>
-                <table>
-                    <tr class="yellow">
-                        <td>ミッション：</td>
-                        <td>商業的な超小型人工衛星バスの開発(3軸姿勢制御・地上との相互無線通信・太陽光発電・など)</td>
-                    </tr>
-                </table>
-                <br>
-                
+            <section class="glass window" id="fks-b-2" data-tilt data-reveal data-shot="cansat-c">
+                <h2>缶サット Fks-B-II <span class="mono">2026</span></h2>
+                <div class="btns">
+                    <a class="btn btn--sm btn--photo" href="./img/fksb_2_body.jpg" target="_blank" rel="noopener">機体の写真</a>
+                    <a class="btn btn--sm btn--photo" href="./img/fksb_2_app1.jpg" target="_blank" rel="noopener">地上局の画面1</a>
+                    <a class="btn btn--sm btn--photo" href="./img/fksb_2_app2.jpg" target="_blank" rel="noopener">地上局の画面2</a>
+                    <a class="btn btn--sm btn--photo" href="./img/fksb_2_sim.jpg" target="_blank" rel="noopener">シミュレータの画面</a>
+                </div>
+                <p class="mission"><small>ミッション：</small><b>商業的な超小型人工衛星バスの開発(3軸姿勢制御・地上との相互無線通信・太陽光発電・など)</b></p>
                 <p>ある程度Fks-B-Iを踏襲していますが、ソフトウェアと基板は1から作りなおしたためかなり変わっています。</p>
-                <ul>
+                <ul class="bullets">
                     <li>地方大会でもらったロケットが全国大会のレギュレーションに沿っていない　恐怖のロケット改造をした</li>
                     <li>シャントレギュレータを使って、MP3-25フレキシブルソーラーパネルからの電力をマイコン系の回路に供給</li>
                     <li>マイコン電源をリポバッテリーからキャパシタに　充電が容易に</li>
@@ -208,23 +151,33 @@
                     <li>シミュレータを作って制御アルゴリズムの再開発　個人的には限界に近い制御ができているんじゃないかと…(そもそもRWの制御は重力とか抵抗がある環境に向かないので)</li>
                     <li>予備機は壊れなかった</li>
                     <li>メインPCを頑丈なレッツノートにした(ヤフオクで八千円)</li>
-                    <li>動作試験&データ解析をたくさんして、プレゼンでの説得力を向上</li>
+                    <li>動作試験&amp;データ解析をたくさんして、プレゼンでの説得力を向上</li>
                 </ul>
-                <p>宇宙甲子園缶サット部門 全国大会でで技術賞をいただきました！やったー！</p>
-            </div><br>
+                <p class="hl">宇宙甲子園缶サット部門 全国大会でで技術賞をいただきました！やったー！</p>
+            </section>
 
-
-
-            <hr>
         </div>
-    </div>
-    <br><br>
+    </main>
 
-    <hr>
-        <p>since 2026-04-15</p>
-
-        <p>================</p>
-        <p>Copyright © 2026 松本深志高等学校地学會</p>
+    <footer class="footer">
+        <div class="footer__inner glass" data-reveal>
+            <div>
+                <h2>地学會とは？</h2>
+                <p>松本深志高校地学會は、地学分野を広く扱う自然科学系の部活動です。</p>
+                <p>詳しくは、「<a href="./about.htm">地学會について</a>」をご覧ください</p>
+            </div>
+            <div>
+                <h2>このページについて</h2>
+                <p>2026年4月に制作された「松本深志高校地学會のホームページ」です。<br>
+                固定された情報源のために制作されました。詳しくは、<a href="./doc/m45_2026_2.pdf#page=98" target="_blank" rel="noopener">26年部誌の97頁</a>をご覧ください。</p>
+            </div>
+            <div>
+                <h2>VISITOR</h2>
+                <p class="counter">あなたは<a href="https://ctr.stylemap.co.jp/"><img src="https://www.f-counter.net/ani1/67/1776341783/" alt="無料アクセスカウンター"></a><a href="https://ctr.stylemap.co.jp/"><img src="https://www.f-counter.net/ani2/67/1776341783/" alt="無料アクセスカウンター"></a>人目のお客様です</p>
+                <p class="footer__meta"><span>since 2026-04-15</span><span>Copyright © 2026 松本深志高等学校地学會</span></p>
+            </div>
+        </div>
+    </footer>
 
 </body>
 </html>
