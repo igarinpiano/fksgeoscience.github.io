@@ -498,6 +498,55 @@ a.tile:hover{
 .lightbox[open]{ animation: pop .5s var(--ease); }
 @keyframes pop{ from{ opacity: 0; scale: .92; translate: 0 2rem; } }
 
+/* ---------- 隠しモードへの入口と、切り替えの演出 ---------- */
+
+.egg{
+    justify-self: start; margin-top: .5rem; padding: .22rem .8rem .26rem .55rem;
+    border: 0; border-radius: 0 999px 999px 0; cursor: pointer;
+    font: italic 700 .72rem/1 var(--font-body); letter-spacing: .04em; color: #fff;
+    background: linear-gradient(#3f9c3f, #5fbe5a 12%, #2f8a2e 70%, #1f611f);
+    box-shadow: inset 1px 1px 2px rgb(255 255 255 / .45), inset -2px -1px 3px rgb(0 0 0 / .35);
+    text-shadow: 1px 1px 1px #153f15;
+    opacity: .16; filter: saturate(.2);
+    transition: opacity .4s, filter .4s, translate .4s var(--ease);
+}
+.egg:hover, .egg:focus-visible{ opacity: 1; filter: none; translate: 0 -2px; }
+.crt img{ cursor: pointer; transition: scale .3s var(--ease); }
+.crt img:hover{ scale: 1.05; }
+
+/* モダン → XP：ブラウン管の電源を切る */
+.crtoff{ position: fixed; inset: 0; z-index: 9999; }
+.crtoff::before, .crtoff::after{
+    content: ""; position: absolute; left: 0; right: 0; height: 50.2%; background: #000;
+    animation: crt-close .4s cubic-bezier(.7, 0, .9, .5) both;
+}
+.crtoff::before{ top: 0; transform-origin: 50% 0; }
+.crtoff::after{ bottom: 0; transform-origin: 50% 100%; }
+.crtoff i{
+    position: absolute; left: 0; right: 0; top: 50%; height: 2px; margin-top: -1px;
+    background: #fff; box-shadow: 0 0 20px 5px #fff; opacity: 0;
+    animation: crt-line .45s .32s both;
+}
+@keyframes crt-close{ from{ transform: scaleY(0); } to{ transform: scaleY(1); } }
+@keyframes crt-line{ 0%{ opacity: 1; transform: scaleX(1); } 100%{ opacity: 0; transform: scaleX(0); } }
+
+/* XP → モダン：起動画面 */
+html.booting::before{ content: ""; position: fixed; inset: 0; z-index: 9998; background: #000; }
+.mboot{
+    position: fixed; inset: 0; z-index: 9999;
+    display: grid; place-items: center;
+    background: #000; color: #fff;
+}
+.mboot__inner{ display: grid; justify-items: center; gap: 2.6rem; }
+.mboot__logo{ width: 4.5rem; height: 4.5rem; filter: invert(1); opacity: 0; animation: mboot-logo .9s .15s var(--ease) forwards; }
+.mboot__bar{ width: 11rem; height: 4px; border-radius: 4px; background: rgb(255 255 255 / .2); overflow: hidden; opacity: 0; animation: mboot-logo .5s .5s forwards; }
+.mboot__bar i{ display: block; height: 100%; border-radius: inherit; background: #fff; transform-origin: 0 50%; transform: scaleX(0); animation: mboot-fill 1.6s .6s cubic-bezier(.3, .1, .2, 1) forwards; }
+.mboot.is-done{ animation: mboot-out 1s var(--ease) forwards; }
+@keyframes mboot-logo{ from{ opacity: 0; scale: .9; } to{ opacity: 1; scale: 1; } }
+@keyframes mboot-fill{ 0%{ transform: scaleX(0); } 30%{ transform: scaleX(.34); } 55%{ transform: scaleX(.42); } 100%{ transform: scaleX(1); } }
+@keyframes mboot-out{ to{ opacity: 0; scale: 1.3; filter: blur(20px); visibility: hidden; } }
+.mbooting .hero h1 .char{ animation-play-state: paused; }
+
 /* ---------- 画面幅 ---------- */
 
 @media (max-width: 860px){
@@ -517,4 +566,5 @@ a.tile:hover{
     .js .hero h1 .char{ animation: none; opacity: 1; translate: none; rotate: none; filter: none; }
     [data-tilt]{ transform: none; }
     .hero__scroll::before{ animation: none; }
+    .crtoff::before, .crtoff::after, .crtoff i, .mboot__logo, .mboot__bar, .mboot__bar i{ animation-duration: .01s; animation-delay: 0s; }
 }

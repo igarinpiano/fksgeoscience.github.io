@@ -6,6 +6,54 @@
     const root = document.documentElement;
     const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
+    // XPモードから戻ってきたときの起動画面
+    if (root.classList.contains('booting')) {
+        const boot = document.createElement('div');
+        boot.className = 'mboot';
+        boot.innerHTML = '<div class="mboot__inner"><img class="mboot__logo" src="./favicon.png" alt=""><div class="mboot__bar" role="progressbar" aria-label="起動しています"><i></i></div></div>';
+        document.body.append(boot);
+        root.classList.replace('booting', 'mbooting');
+        let done = false;
+        const finish = () => {
+            if (done) return;
+            done = true;
+            root.classList.remove('mbooting');
+            boot.classList.add('is-done');
+            boot.addEventListener('animationend', (ev) => { if (ev.target === boot) boot.remove(); });
+        };
+        setTimeout(finish, reduce ? 600 : 2600);
+        boot.addEventListener('pointerdown', finish);
+    }
+
+    // 隠しモード（地学會 XP）への入口：フッターの小さな「スタート」と、トップの「マルチな部活」
+    const toXP = () => {
+        if (document.querySelector('.crtoff')) return;
+        const off = document.createElement('div');
+        off.className = 'crtoff';
+        off.innerHTML = '<i></i>';
+        document.body.append(off);
+        setTimeout(() => { location.href = './xp.htm'; }, reduce ? 150 : 820);
+    };
+    // 「戻る」で帰ってきたときに、暗転したままにしない
+    addEventListener('pageshow', (ev) => { if (ev.persisted) document.querySelector('.crtoff')?.remove(); });
+    const meta = document.querySelector('.footer__meta');
+    if (meta) {
+        const egg = document.createElement('button');
+        egg.type = 'button';
+        egg.className = 'egg';
+        egg.textContent = 'スタート';
+        egg.setAttribute('aria-label', 'なつかしいほうの地学會（XPモード）をひらく');
+        egg.addEventListener('click', toXP);
+        meta.append(egg);
+    }
+    const crtGif = document.querySelector('.crt img');
+    if (crtGif) {
+        crtGif.tabIndex = 0;
+        crtGif.setAttribute('role', 'button');
+        crtGif.addEventListener('click', toXP);
+        crtGif.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') toXP(); });
+    }
+
     // 見出しを1文字ずつ起こす
     document.querySelectorAll('[data-split]').forEach((el) => {
         const text = el.textContent;

@@ -11,7 +11,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Shippori+Mincho+B1:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css" type="text/css">
-    <script>document.documentElement.classList.add('js');</script>
+    <script>
+      document.documentElement.classList.add('js');
+      // XPモードから戻ってきたら、まず起動画面を出す（js/site.js が続きを担当）
+      try { if (sessionStorage.getItem('fks-boot')) { sessionStorage.removeItem('fks-boot'); document.documentElement.classList.add('booting'); } } catch (e) {}
+    </script>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-NJ1BKL1EBQ"></script>
     <script>
@@ -208,6 +212,8 @@
         console.log(" ");
         console.log(" ");
         console.log("[=======　こんにちは！入部してほしいなぁ　=======]");
+        console.log(" ");
+        console.log("[ ヒント: ページのいちばん下に、なつかしい入口があります ]");
         console.log(" ");
         console.log(" ");
         console.log(" ");

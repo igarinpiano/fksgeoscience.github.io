@@ -1,0 +1,146 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 520" role="img" aria-labelledby="t">
+  <title id="t">地学会員Pちゃん</title>
+  <!-- 背景は透過。白いふちどり（ステッカー風）で、暗い背景でも明るい背景でも使えます -->
+  <defs>
+    <linearGradient id="hair" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2b2b2e"/>
+      <stop offset=".6" stop-color="#3f3f42"/>
+      <stop offset="1" stop-color="#5a5a5e"/>
+    </linearGradient>
+    <linearGradient id="hairFront" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3a3a3d"/>
+      <stop offset="1" stop-color="#262629"/>
+    </linearGradient>
+    <linearGradient id="eye" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#11142b"/>
+      <stop offset=".55" stop-color="#27306a"/>
+      <stop offset="1" stop-color="#6f86d8"/>
+    </linearGradient>
+    <linearGradient id="shirt" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#c9c9c9"/>
+      <stop offset=".35" stop-color="#e2e2e2"/>
+      <stop offset="1" stop-color="#cfcfcf"/>
+    </linearGradient>
+    <linearGradient id="spectrum" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ff2a2a"/>
+      <stop offset=".2" stop-color="#ff9d2e"/>
+      <stop offset=".38" stop-color="#f4ef4a"/>
+      <stop offset=".55" stop-color="#2fe38a"/>
+      <stop offset=".72" stop-color="#19c8ff"/>
+      <stop offset=".88" stop-color="#3d6bff"/>
+      <stop offset="1" stop-color="#7a3cff"/>
+    </linearGradient>
+    <radialGradient id="gold" cx=".35" cy=".3" r=".8">
+      <stop offset="0" stop-color="#ffe97a"/>
+      <stop offset=".6" stop-color="#f0c300"/>
+      <stop offset="1" stop-color="#d59a00"/>
+    </radialGradient>
+    <radialGradient id="nebula">
+      <stop offset="0" stop-color="#d9fffb" stop-opacity=".95"/>
+      <stop offset=".45" stop-color="#7fd6d0" stop-opacity=".6"/>
+      <stop offset="1" stop-color="#55a9a7" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="sticker" x="-10%" y="-10%" width="120%" height="120%">
+      <feMorphology in="SourceAlpha" operator="dilate" radius="5" result="fat"/>
+      <feFlood flood-color="#fff"/>
+      <feComposite in2="fat" operator="in" result="edge"/>
+      <feMerge><feMergeNode in="edge"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <g filter="url(#sticker)" stroke="#18181b" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round">
+
+    <!-- うしろ髪 -->
+    <path fill="url(#hair)" d="M108 150C92 240 86 330 100 412l22-16 10 22 18-18h100l18 18 10-22 22 16c14-82 8-172-8-262z"/>
+    <path fill="none" stroke="#6b6b70" stroke-width="2" opacity=".6" d="M118 250c-6 50-6 96 0 136M282 250c6 50 6 96 0 136M136 300c-3 30-3 60 1 86M264 300c3 30 3 60-1 86"/>
+
+    <!-- ズボンと靴 -->
+    <path fill="#818181" d="M160 340h80l5 124h-39l-3-92h-6l-3 92h-39z"/>
+    <path fill="#6e6e6e" stroke="none" d="M203 372l3 90h8l-5-98zM160 352h80v8h-80z" opacity=".55"/>
+    <path fill="#151517" d="M154 460h43v16a7 7 0 0 1-7 7h-42a11 11 0 0 1-11-11 12 12 0 0 1 12-12z"/>
+    <path fill="#151517" d="M246 460h-43v16a7 7 0 0 0 7 7h42a11 11 0 0 0 11-11 12 12 0 0 0-12-12z"/>
+    <path fill="none" stroke="#4a4a50" stroke-width="2" d="M146 472h20M254 472h-20"/>
+
+    <!-- 岩石ハンマー（腰の左） -->
+    <path fill="#8a5900" d="M167 352l8 1-6 62-9-1z"/>
+    <path fill="#55585e" d="M150 349l36-3 2 11-14 3-3-3-21 3z"/>
+
+    <!-- 下ろした腕 -->
+    <path fill="#ffe7d6" d="M254 290l19-4c5 22 5 42 0 60-6 9-17 7-18-2 3-18 3-36-1-54z"/>
+    <!-- シャツ -->
+    <path fill="url(#shirt)" d="M152 250c-3 40 1 70 4 100h88c3-30 7-60 4-100-13-10-83-10-96 0z"/>
+    <path fill="url(#shirt)" d="M246 249c16 3 27 18 30 41l-24 7c-1-18-4-32-8-40z"/>
+    <path fill="none" stroke="#9c9c9c" stroke-width="2" d="M200 264v84"/>
+    <g fill="#f6f6f6" stroke-width="1.6"><circle cx="200" cy="288" r="3"/><circle cx="200" cy="312" r="3"/><circle cx="200" cy="334" r="3"/></g>
+    <!-- 天気図記号のバッジ -->
+    <circle cx="229" cy="284" r="8.5" fill="#fff"/>
+    <path fill="none" stroke-width="2.2" d="M224 290l10-12"/>
+
+    <!-- 太陽スペクトルのベルト -->
+    <rect x="156" y="342" width="88" height="10" rx="2" fill="url(#spectrum)"/>
+    <path fill="none" stroke="#18181b" stroke-width="1.2" opacity=".75" d="M171 343v8M190 343v8M197 343v8M214 343v8M231 343v8"/>
+
+    <!-- アストロラーベ（腰の右） -->
+    <path fill="none" stroke="#8a5900" stroke-width="2.4" d="M238 352l12 18"/>
+    <circle cx="252" cy="372" r="4" fill="none" stroke="#8a5900" stroke-width="2.4"/>
+    <circle cx="254" cy="393" r="17" fill="url(#gold)" stroke="#8a5900"/>
+    <circle cx="254" cy="393" r="11" fill="none" stroke="#8a5900" stroke-width="1.6"/>
+    <path fill="none" stroke="#8a5900" stroke-width="2" d="M243 401l22-16M254 382v22"/>
+    <circle cx="254" cy="393" r="2.2" fill="#8a5900" stroke="none"/>
+
+    <!-- 首とえり -->
+    <path fill="#ffe7d6" d="M188 226h24v24q-12 9-24 0z"/>
+    <path fill="#ececec" d="M181 243l19 20-11 10-19-22z"/>
+    <path fill="#ececec" d="M219 243l-19 20 11 10 19-22z"/>
+
+    <!-- 天体用双眼鏡 -->
+    <path fill="none" stroke="#222" stroke-width="2.4" d="M183 256l6 40M217 256l-6 40"/>
+    <rect x="180" y="294" width="18" height="36" rx="5.5" fill="#1b1b1e"/>
+    <rect x="202" y="294" width="18" height="36" rx="5.5" fill="#1b1b1e"/>
+    <rect x="195" y="302" width="10" height="9" rx="2" fill="#2c2c30"/>
+    <path fill="#5d6f96" stroke="none" d="M183 324h12v2.5a3 3 0 0 1-3 3h-6a3 3 0 0 1-3-3zM205 324h12v2.5a3 3 0 0 1-3 3h-6a3 3 0 0 1-3-3z"/>
+    <path fill="none" stroke="#6c6c74" stroke-width="2" d="M185 300v16M207 300v16"/>
+
+    <!-- 手をふる腕 -->
+    <path fill="#ffe7d6" d="M117 270L81 196l-17 8 36 75z"/>
+    <path fill="#ffe7d6" d="M70 206c-11-1-19-10-19-22 0-13 9-23 20-23 10 0 18 8 20 19l8-3c5-1 8 4 5 8l-12 13c-5 6-13 9-22 8z"/>
+    <path fill="none" stroke-width="1.8" d="M62 164v9M71 162v10M80 165v8"/>
+    <path fill="url(#shirt)" d="M156 246c-17 0-35 7-51 15l9 26c14-6 28-10 42-10z"/>
+
+    <!-- 顔 -->
+    <path fill="#ffe7d6" d="M118 152c0-52 164-52 164 0 0 54-37 85-82 85s-82-31-82-85z"/>
+    <ellipse cx="149" cy="197" rx="16" ry="6.5" fill="#ff4fb5" opacity=".38" stroke="none"/>
+    <ellipse cx="251" cy="197" rx="16" ry="6.5" fill="#ff4fb5" opacity=".38" stroke="none"/>
+    <!-- 目 -->
+    <g stroke="none">
+      <ellipse cx="166" cy="172" rx="16" ry="21" fill="url(#eye)"/>
+      <ellipse cx="234" cy="172" rx="16" ry="21" fill="url(#eye)"/>
+      <circle cx="159" cy="163" r="6.5" fill="#fff"/>
+      <circle cx="227" cy="163" r="6.5" fill="#fff"/>
+      <circle cx="173" cy="183" r="3.2" fill="#fff" opacity=".9"/>
+      <circle cx="241" cy="183" r="3.2" fill="#fff" opacity=".9"/>
+    </g>
+    <path fill="none" stroke-width="4.6" d="M147 167q17-23 39-7M214 160q22-16 39 7"/>
+    <path fill="none" stroke-width="2.4" d="M147 167l-6-1M253 167l6-1"/>
+    <path fill="none" stroke="#3a3a3d" stroke-width="2.2" d="M153 141q13-7 27-3M220 138q14-4 27 3"/>
+    <!-- 口 -->
+    <path fill="#b83a4e" stroke-width="2.2" d="M187 205q13 20 26 0z"/>
+    <ellipse cx="200" cy="214" rx="5.5" ry="3" fill="#ff93a6" stroke="none"/>
+
+    <!-- 前髪 -->
+    <path fill="url(#hairFront)" d="M108 240c-10-48-10-118 22-154 30-32 110-32 140 0 32 36 32 106 22 154l-12-16c4-22 3-44-4-64Q270 132 250 118Q226 120 200 152Q174 120 150 118Q130 132 124 160c-7 20-8 42-4 64z"/>
+    <path fill="none" stroke="#77777d" stroke-width="5" opacity=".55" d="M142 104q58-26 118 2"/>
+    <path fill="none" stroke="#77777d" stroke-width="2" opacity=".5" d="M116 176c-2 18-2 34 0 48M284 176c2 18 2 34 0 48"/>
+    <!-- 常に天の北極を指すアホ毛 -->
+    <path fill="url(#hairFront)" d="M199 64c-8-26-28-36-44-31 16 4 28 16 34 35z"/>
+
+    <!-- 髪かざり：惑星状星雲 NGC7009 -->
+    <g stroke="none">
+      <circle cx="263" cy="112" r="24" fill="url(#nebula)"/>
+      <ellipse cx="263" cy="112" rx="12" ry="7.5" fill="#7abcba" transform="rotate(-24 263 112)"/>
+      <ellipse cx="263" cy="112" rx="6.5" ry="3.6" fill="#e2fffc" transform="rotate(-24 263 112)"/>
+      <circle cx="246" cy="119.500" r="2.4" fill="#a5d2d0"/>
+      <circle cx="280" cy="104.500" r="2.4" fill="#a5d2d0"/>
+    </g>
+  </g>
+</svg>

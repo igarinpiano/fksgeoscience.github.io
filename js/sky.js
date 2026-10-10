@@ -7,6 +7,8 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 
 const DEG = Math.PI / 180;
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -88,9 +90,11 @@ function start() {
     sun.position.copy(SUN).multiplyScalar(100);
     scene.add(sun, new THREE.HemisphereLight(0x8fb4ff, 0x05060c, 0.4));
 
+    // 解像度：PCは実ピクセル等倍（低DPIでは1.25倍で描いて縮小）、MSAAつき
     const coarse = matchMedia('(pointer: coarse)').matches;
-    let dpr = Math.min(devicePixelRatio || 1, coarse ? 1.5 : 1.75);
-    const target = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: coarse ? 0 : 4 });
+    const baseDpr = coarse ? Math.min(devicePixelRatio || 1, 1.75) : Math.min(Math.max(devicePixelRatio || 1, 1.25), 2);
+    let dpr = baseDpr;
+    const target = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: coarse ? 2 : 4 });
     const composer = new EffectComposer(renderer, target);
     composer.addPass(new RenderPass(scene, camera));
     const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.5, 0.7, 1.0);
@@ -100,6 +104,19 @@ function start() {
     // 時間で動くものはここに登録する
     const tickers = [];
     const uTime = { value: 0 };
+    const earthOct = { value: 7 };
+    const G_NOISE = /* glsl */`
+        float gHash(vec3 p){ p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
+        float gNoise(vec3 x){
+            vec3 i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * f);
+            return mix(mix(mix(gHash(i), gHash(i + vec3(1,0,0)), f.x), mix(gHash(i + vec3(0,1,0)), gHash(i + vec3(1,1,0)), f.x), f.y),
+                       mix(mix(gHash(i + vec3(0,0,1)), gHash(i + vec3(1,0,1)), f.x), mix(gHash(i + vec3(0,1,1)), gHash(i + vec3(1,1,1)), f.x), f.y), f.z);
+        }
+        float gFbm(vec3 p, int oct){
+            float a = 0.5, s = 0.0;
+            for (int i = 0; i < 8; i++){ if (i >= oct) break; s += a * gNoise(p); p = p * 2.03 + 17.7; a *= 0.5; }
+            return s;
+        }`;
 
     // ---------- 星空（カメラに追従＝無限遠） ----------
     const sky = new THREE.Group();
@@ -238,11 +255,21 @@ function start() {
     // ---------- ループ ----------
     const clock = new THREE.Clock();
     const tmpR = V(), tmpU = V(), tmpF = V();
-    let slowFrames = 0, frames = 0, degraded = false;
+    let frames = 0, quality = 0, warm = false, accT = 0, accN = 0;
+
+    // 重い端末では一気に落とさず、解像度を少しずつ下げる（最終段でブルームと細部ノイズも省く）
+    function setQuality(q) {
+        quality = q;
+        dpr = [baseDpr, Math.max(1, baseDpr * 0.8), Math.max(1, baseDpr * 0.62), 1][q];
+        bloom.enabled = q < 3;
+        earthOct.value = q < 3 ? 7 : 5;
+        resize();
+    }
 
     function loop() {
         requestAnimationFrame(loop);
-        const dt = Math.min(clock.getDelta(), 0.05);
+        const raw = clock.getDelta();
+        const dt = Math.min(raw, 0.05);
         const t = reduce ? 8 : clock.elapsedTime;
         uTime.value = t;
 
@@ -274,15 +301,14 @@ function start() {
         }
         composer.render(dt);
 
-        if (frames === 0) canvas.classList.add('is-ready');
-        // 重い端末では解像度とブルームを落とす
-        if (!degraded && ++frames > 40 && frames < 220) {
-            if (dt > 0.034) slowFrames++;
-            if (slowFrames > 60) {
-                degraded = true;
-                dpr = 1;
-                bloom.enabled = false;
-                resize();
+        if (frames++ === 0) canvas.classList.add('is-ready');
+        if (quality < 3 && !document.hidden && raw < 0.25) {
+            accT += raw;
+            if (++accN >= 45) {
+                // 最初の区間はシェーダのコンパイルを含むので数えない
+                if (warm && accT / accN > 0.03) setQuality(quality + 1);
+                warm = true;
+                accT = accN = 0;
             }
         }
     }
@@ -502,22 +528,67 @@ function start() {
         };
     }
 
+    // ---------- 手続き的な質感 ----------
+    // 形はノイズで頂点を動かし、色と細かい凹凸はピクセル単位で描く（ポリゴンの角を見せない）
+
+    function jsHash(x, y, z) {
+        const n = Math.sin(x * 127.1 + y * 311.7 + z * 74.7) * 43758.5453;
+        return n - Math.floor(n);
+    }
+    function jsNoise(x, y, z) {
+        const ix = Math.floor(x), iy = Math.floor(y), iz = Math.floor(z);
+        let fx = x - ix, fy = y - iy, fz = z - iz;
+        fx = fx * fx * (3 - 2 * fx); fy = fy * fy * (3 - 2 * fy); fz = fz * fz * (3 - 2 * fz);
+        const l = (a, b, t) => a + (b - a) * t;
+        const h = jsHash;
+        return l(
+            l(l(h(ix, iy, iz), h(ix + 1, iy, iz), fx), l(h(ix, iy + 1, iz), h(ix + 1, iy + 1, iz), fx), fy),
+            l(l(h(ix, iy, iz + 1), h(ix + 1, iy, iz + 1), fx), l(h(ix, iy + 1, iz + 1), h(ix + 1, iy + 1, iz + 1), fx), fy),
+            fz,
+        );
+    }
+    function jsFbm(x, y, z, oct = 4) {
+        let a = 0.5, s = 0;
+        for (let i = 0; i < oct; i++) {
+            s += a * jsNoise(x, y, z);
+            x = x * 2.03 + 17.7; y = y * 2.03 + 17.7; z = z * 2.03 + 17.7;
+            a *= 0.5;
+        }
+        return s;
+    }
+    function smooth(a, b, x) { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); }
+
+    // 標準マテリアルに、オブジェクト座標ベースの色と凹凸を差し込む
+    function procedural(mat, { head = '', color = '', bump = '' }) {
+        mat.onBeforeCompile = (sh) => {
+            sh.vertexShader = sh.vertexShader
+                .replace('#include <common>', '#include <common>\nvarying vec3 vOP;')
+                .replace('#include <begin_vertex>', '#include <begin_vertex>\nvOP = position;');
+            sh.fragmentShader = sh.fragmentShader
+                .replace('#include <common>', `#include <common>\nvarying vec3 vOP;\n${G_NOISE}\n${head}`)
+                .replace('#include <color_fragment>', `#include <color_fragment>\n{\n${color}\n}`)
+                .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>\n${bump}`);
+        };
+        mat.customProgramCacheKey = () => head + color + bump;
+        return mat;
+    }
+    // 高さ式 expr の勾配で法線を傾ける（amount は凹凸の深さ）
+    function bumpCode(expr, amount) {
+        return /* glsl */`
+            {
+                float bh = ${expr};
+                vec3 sx = dFdx(-vViewPosition), sy = dFdy(-vViewPosition);
+                vec3 r1 = cross(sy, normal), r2 = cross(normal, sx);
+                float det = dot(sx, r1);
+                vec3 nn = abs(det) * normal - sign(det) * (dFdx(bh) * r1 + dFdy(bh) * r2) * ${amount.toFixed(4)};
+                if (dot(nn, nn) > 0.0) normal = normalize(nn);
+            }`;
+    }
+
     function makeEarth() {
         const group = new THREE.Group();
-        const NOISE = /* glsl */`
-            float hash(vec3 p){ p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
-            float noise(vec3 x){
-                vec3 i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * f);
-                return mix(mix(mix(hash(i), hash(i + vec3(1,0,0)), f.x), mix(hash(i + vec3(0,1,0)), hash(i + vec3(1,1,0)), f.x), f.y),
-                           mix(mix(hash(i + vec3(0,0,1)), hash(i + vec3(1,0,1)), f.x), mix(hash(i + vec3(0,1,1)), hash(i + vec3(1,1,1)), f.x), f.y), f.z);
-            }
-            float fbm(vec3 p){
-                float a = 0.5, s = 0.0;
-                for (int i = 0; i < 6; i++){ s += a * noise(p); p = p * 2.03 + 17.7; a *= 0.5; }
-                return s;
-            }`;
         const surface = new THREE.ShaderMaterial({
-            uniforms: { uSun: { value: SUN }, uTime },
+            uniforms: { uSun: { value: SUN }, uTime, uOct: earthOct },
             vertexShader: /* glsl */`
                 varying vec3 vObj; varying vec3 vN; varying vec3 vW;
                 void main(){
@@ -528,43 +599,62 @@ function start() {
                     gl_Position = projectionMatrix * viewMatrix * w;
                 }`,
             fragmentShader: /* glsl */`
-                uniform vec3 uSun; uniform float uTime;
+                uniform vec3 uSun; uniform float uTime; uniform int uOct;
                 varying vec3 vObj; varying vec3 vN; varying vec3 vW;
-                ${NOISE}
+                ${G_NOISE}
                 void main(){
                     vec3 p = normalize(vObj);
-                    vec3 warp = vec3(noise(p * 2.3 + 11.0), noise(p * 2.3 + 47.0), noise(p * 2.3 + 83.0)) - 0.5;
-                    float h = fbm(p * 1.75 + warp * 0.9);
-                    float land = smoothstep(0.545, 0.565, h);
+                    vec3 warp = vec3(gNoise(p * 2.3 + 11.0), gNoise(p * 2.3 + 47.0), gNoise(p * 2.3 + 83.0)) - 0.5;
+                    float h = gFbm(p * 1.75 + warp * 0.9, uOct);
+                    float land = smoothstep(0.549, 0.556, h);
                     float lat = abs(p.y);
-                    float elev = clamp((h - 0.55) / 0.2, 0.0, 1.0);
+                    float elev = clamp((h - 0.552) / 0.2, 0.0, 1.0);
 
+                    // 海：沖は深い青、大陸棚はエメラルド
                     vec3 ocean = mix(vec3(0.003, 0.016, 0.06), vec3(0.008, 0.075, 0.14), smoothstep(0.38, 0.55, h));
-                    float arid = smoothstep(0.34, 0.06, abs(lat - 0.33)) * smoothstep(0.35, 0.65, noise(p * 3.1 + 5.0));
-                    vec3 veg = mix(vec3(0.02, 0.085, 0.02), vec3(0.085, 0.13, 0.035), noise(p * 9.0));
-                    vec3 ground = mix(veg, vec3(0.32, 0.23, 0.11), arid);
-                    ground = mix(ground, vec3(0.17, 0.14, 0.11), smoothstep(0.35, 0.7, elev));
-                    ground = mix(ground, vec3(0.85), smoothstep(0.78, 0.98, elev));
+                    float shelf = smoothstep(0.515, 0.552, h);
+                    ocean = mix(ocean, vec3(0.015, 0.2, 0.2), shelf * shelf * 0.75);
+
+                    // 陸：植生・乾燥帯・山・雪
+                    float arid = smoothstep(0.34, 0.06, abs(lat - 0.33)) * smoothstep(0.35, 0.65, gNoise(p * 3.1 + 5.0));
+                    vec3 veg = mix(vec3(0.018, 0.08, 0.018), vec3(0.09, 0.135, 0.035), gNoise(p * 9.0));
+                    veg *= 0.82 + 0.36 * gNoise(p * 70.0);
+                    vec3 ground = mix(veg, vec3(0.34, 0.24, 0.11) * (0.8 + 0.4 * gNoise(p * 45.0)), arid);
+                    ground = mix(ground, vec3(0.17, 0.14, 0.11), smoothstep(0.3, 0.65, elev));
+                    ground = mix(ground, vec3(0.86), smoothstep(0.84, 1.0, elev + (gNoise(p * 90.0) - 0.5) * 0.08));
                     float ice = smoothstep(0.82, 0.9, lat + (h - 0.5) * 0.3);
                     vec3 albedo = mix(mix(ocean, ground, land), vec3(0.82, 0.88, 0.95), ice);
 
                     float ca = uTime * 0.006;
                     vec3 cp = vec3(p.x * cos(ca) - p.z * sin(ca), p.y, p.x * sin(ca) + p.z * cos(ca));
-                    float c = fbm(cp * 3.6 + warp * 1.3 + vec3(0.0, uTime * 0.003, 0.0));
-                    float cloud = smoothstep(0.5, 0.74, c) * 0.94;
+                    float c = gFbm(cp * 3.6 + warp * 1.3 + vec3(0.0, uTime * 0.003, 0.0), uOct - 1);
+                    c += (gNoise(cp * 26.0 + 3.0) - 0.5) * 0.07;
+                    float cloud = smoothstep(0.5, 0.72, c) * 0.95;
 
                     vec3 N = normalize(vN), L = normalize(uSun), Vd = normalize(cameraPosition - vW);
+                    // 地形の陰影（高さの勾配で法線を傾ける）
+                    vec3 Nr = N;
+                    {
+                        float bh = max(h, 0.552);
+                        vec3 sx = dFdx(vW), sy = dFdy(vW);
+                        vec3 r1 = cross(sy, N), r2 = cross(N, sx);
+                        float det = dot(sx, r1);
+                        vec3 nn = abs(det) * N - sign(det) * (dFdx(bh) * r1 + dFdy(bh) * r2) * 2.2;
+                        if (dot(nn, nn) > 0.0) Nr = normalize(nn);
+                    }
                     float ndl = dot(N, L);
                     float day = smoothstep(-0.12, 0.25, ndl);
                     float diff = max(ndl, 0.0);
+                    float diffR = max(dot(Nr, L), 0.0) * smoothstep(0.0, 0.22, ndl);
 
-                    vec3 col = albedo * diff * 1.7;
+                    vec3 col = albedo * mix(diff, diffR, land * (1.0 - ice * 0.5)) * 1.7;
                     float spec = pow(max(dot(N, normalize(L + Vd)), 0.0), 140.0);
                     col += vec3(1.0, 0.94, 0.82) * spec * (1.0 - land) * (1.0 - cloud) * 0.9;
-                    col = mix(col, vec3(1.0, 0.99, 0.97) * (diff * 1.02 + 0.015), cloud);
+                    float thick = smoothstep(0.5, 0.95, c);
+                    col = mix(col, vec3(1.0, 0.99, 0.97) * (diff * (0.86 + 0.2 * thick) + 0.015), cloud);
 
                     // 夜側の街あかり
-                    float city = smoothstep(0.4, 0.68, noise(p * 110.0) * noise(p * 34.0 + 3.0)) * smoothstep(0.3, 0.6, noise(p * 7.0 + 9.0));
+                    float city = smoothstep(0.4, 0.68, gNoise(p * 110.0) * gNoise(p * 34.0 + 3.0)) * smoothstep(0.3, 0.6, gNoise(p * 7.0 + 9.0));
                     city *= land * (1.0 - ice) * smoothstep(0.8, 0.3, elev);
                     col += vec3(1.0, 0.7, 0.34) * city * (1.0 - day) * (1.0 - cloud * 0.85) * 1.3;
 
@@ -577,12 +667,12 @@ function start() {
                     gl_FragColor = vec4(col, 1.0);
                 }`,
         });
-        const globe = new THREE.Mesh(new THREE.SphereGeometry(EARTH_R, 160, 120), surface);
+        const globe = new THREE.Mesh(new THREE.SphereGeometry(EARTH_R, 256, 192), surface);
         globe.rotation.z = 23.4 * DEG;
         group.add(globe);
 
         const air = new THREE.Mesh(
-            new THREE.SphereGeometry(EARTH_R * 1.12, 96, 64),
+            new THREE.SphereGeometry(EARTH_R * 1.12, 128, 96),
             new THREE.ShaderMaterial({
                 uniforms: { uSun: { value: SUN } },
                 vertexShader: /* glsl */`
@@ -605,14 +695,43 @@ function start() {
         return group;
     }
 
+    // ノイズでいびつにした岩。同じシェーダを全部の岩で使い回す
+    function rock(radius, seed, tint, detail = 10) {
+        let geo = new THREE.IcosahedronGeometry(1, detail);
+        geo.deleteAttribute('uv');
+        geo.deleteAttribute('normal');
+        geo = mergeVertices(geo);
+        const p = geo.attributes.position;
+        for (let i = 0; i < p.count; i++) {
+            const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+            const lump = jsFbm(x * 1.4 + seed, y * 1.4, z * 1.4, 4);
+            const chip = Math.abs(jsNoise(x * 3.3 + seed, y * 3.3 + 9, z * 3.3) - 0.5);
+            const k = radius * (0.62 + 0.75 * lump - 0.35 * chip);
+            p.setXYZ(i, x * k, y * k * 0.85, z * k);
+        }
+        geo.computeVertexNormals();
+        const mat = procedural(std(tint, { roughness: 0.95, metalness: 0 }), {
+            color: 'diffuseColor.rgb *= 0.5 + 0.95 * gFbm(vOP * 4.0, 5);',
+            bump: bumpCode('gFbm(vOP * 7.0, 5) + 0.35 * gNoise(vOP * 40.0)', 0.05),
+        });
+        return new THREE.Mesh(geo, mat);
+    }
+
     function crystal(h, r, color) {
-        const mat = std(color, { roughness: 0.2, metalness: 0.05, flatShading: true, transparent: true, opacity: 0.86, emissive: color, emissiveIntensity: 0.35, envMapIntensity: 3 });
+        const mat = new THREE.MeshPhysicalMaterial({
+            color, roughness: 0.2, metalness: 0, flatShading: true,
+            clearcoat: 1, clearcoatRoughness: 0.25, iridescence: 0.7, iridescenceIOR: 1.6,
+            transparent: true, opacity: 0.9, emissive: color, emissiveIntensity: 0.3, envMapIntensity: 3.2,
+        });
         const g = new THREE.Group();
-        const body = new THREE.Mesh(new THREE.CylinderGeometry(r, r * 0.8, h, 6), mat);
+        // 六角柱＋二段の錐面
+        const body = new THREE.Mesh(new THREE.CylinderGeometry(r, r * 0.82, h, 6), mat);
         body.position.y = h / 2;
-        const tip = new THREE.Mesh(new THREE.ConeGeometry(r, r * 1.5, 6), mat);
-        tip.position.y = h + r * 0.75;
-        g.add(body, tip);
+        const shoulder = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.55, r, r * 0.7, 6), mat);
+        shoulder.position.y = h + r * 0.35;
+        const tip = new THREE.Mesh(new THREE.ConeGeometry(r * 0.55, r * 0.9, 6), mat);
+        tip.position.y = h + r * 0.7 + r * 0.45;
+        g.add(body, shoulder, tip);
         return g;
     }
 
@@ -625,50 +744,85 @@ function start() {
             c.position.set(rand(0.3, -0.3) * scale, 0, rand(0.3, -0.3) * scale);
             g.add(c);
         }
+        const base = rock(0.42 * scale, count * 3.7, 0x6b5a4c, 6);
+        base.scale.y = 0.5;
+        g.add(base);
         return g;
     }
 
     function makeIsland() {
         const g = new THREE.Group();
+        const rockTints = [0x8a6a4f, 0x5d4233, 0xa5613f, 0x6b7078, 0x9a8468, 0x4b5560];
 
-        // 地層の見える岩塊
+        // --- 地層の見える岩塊 ---
         const H = 6;
-        const geo = new THREE.CylinderGeometry(1, 1, H, 40, 22, false).toNonIndexed();
+        const bandOf = (x, y, z) => (y + x * 0.09 - z * 0.05 + 0.12 * Math.sin(x * 1.3)) * 1.9 + 6.2;
+        let geo = new THREE.CylinderGeometry(1, 1, H, 240, 132, true);
+        geo.deleteAttribute('uv');
+        geo.deleteAttribute('normal');
+        geo = mergeVertices(geo);
         const p = geo.attributes.position;
-        const bands = [0x5d4233, 0x8a6a4f, 0xc2a57a, 0x4b5560, 0xa5613f, 0xd9caa8, 0x39414c, 0x7d6f8a, 0x9a8468, 0x2f3238];
-        const colors = new Float32Array(p.count * 3);
-        const c = new THREE.Color();
-        const wob = (a, y) => Math.sin(a * 3 + y * 2.1) * 0.5 + Math.sin(a * 7 - y * 3.7) * 0.25 + Math.sin(a * 13 + y * 5.3) * 0.125;
         for (let i = 0; i < p.count; i++) {
-            const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
-            const rr = Math.hypot(x, z);
-            const a = Math.atan2(z, x);
+            const y = p.getY(i);
+            const a = Math.atan2(p.getZ(i), p.getX(i));
+            const nx = Math.cos(a), nz = Math.sin(a);
             const t = (y + H / 2) / H;
-            const profile = (0.1 + 0.9 * Math.pow(t, 0.62)) * 4.1 * (1 + wob(a, y) * 0.13);
-            const s = rr > 0.001 ? profile : 0;
-            p.setXYZ(i, x * s, y + (rr > 0.001 ? 0 : (t < 0.5 ? -0.6 : 0)), z * s);
+            const base = (0.03 + 0.97 * Math.pow(t, 0.6)) * 4.1;
+            const lump = jsFbm(nx * 1.3 + 3, y * 0.5, nz * 1.3, 4) - 0.5;
+            const fine = jsFbm(nx * 5 + 9, y * 2.2, nz * 5, 4) - 0.5;
+            // 硬い層は張り出し、やわらかい層はえぐれる
+            const b = bandOf(nx * base, y, nz * base);
+            const bi = Math.floor(b);
+            const hard = jsHash(bi - 1, 3.1, 7.7) + (jsHash(bi, 3.1, 7.7) - jsHash(bi - 1, 3.1, 7.7)) * smooth(0, 0.14, b - bi);
+            const r = base * (1 + lump * 0.34 + fine * 0.07) + (hard - 0.5) * 0.34 * Math.min(1, t * 3);
+            p.setXYZ(i, nx * r, y, nz * r);
         }
-        // 面ごとに地層の色を決める（わずかに傾いた層）
-        for (let i = 0; i < p.count; i += 3) {
-            const cy = (p.getY(i) + p.getY(i + 1) + p.getY(i + 2)) / 3;
-            const cx = (p.getX(i) + p.getX(i + 1) + p.getX(i + 2)) / 3;
-            const cz = (p.getZ(i) + p.getZ(i + 1) + p.getZ(i + 2)) / 3;
-            const layer = Math.floor((cy + cx * 0.09 - cz * 0.05 + 3.2 + Math.sin(cx * 1.3) * 0.12) * 1.9);
-            c.set(bands[((layer % bands.length) + bands.length) % bands.length]);
-            c.offsetHSL(0, 0, rand(0.03, -0.03));
-            for (let j = 0; j < 3; j++) colors.set([c.r, c.g, c.b], (i + j) * 3);
-        }
-        geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
         geo.computeVertexNormals();
-        const rock = new THREE.Mesh(geo, std(0xffffff, { vertexColors: true, flatShading: true, roughness: 0.92, metalness: 0 }));
-        rock.position.y = -H / 2;
-        g.add(rock);
+        const STRATA = /* glsl */`
+            const vec3 BANDS[8] = vec3[8](
+                vec3(0.50, 0.34, 0.19), vec3(0.06, 0.07, 0.09), vec3(0.34, 0.10, 0.05), vec3(0.60, 0.54, 0.40),
+                vec3(0.19, 0.10, 0.06), vec3(0.24, 0.26, 0.29), vec3(0.19, 0.15, 0.27), vec3(0.47, 0.31, 0.09));
+            vec3 bandColor(float i){ return BANDS[int(mod(floor(gHash(vec3(i, 1.7, 4.2)) * 8.0) + i, 8.0))]; }
+            vec3 strata(vec3 p){
+                float b = (p.y + p.x * 0.09 - p.z * 0.05 + 0.12 * sin(p.x * 1.3) + (gFbm(p * 1.1, 3) - 0.5) * 0.14) * 1.9 + 6.2;
+                float i = floor(b), f = fract(b);
+                vec3 c = mix(bandColor(i), bandColor(i + 1.0), smoothstep(0.9, 1.0, f));
+                c *= 0.78 + 0.34 * gNoise(vec3(b * 14.0, p.x * 0.5, p.z * 0.5));
+                c *= 0.6 + 0.8 * gFbm(p * 4.0, 5);
+                return c;
+            }`;
+        const cliff = new THREE.Mesh(geo, procedural(std(0xffffff, { roughness: 0.93, metalness: 0 }), {
+            head: STRATA,
+            color: 'diffuseColor.rgb = strata(vOP);',
+            bump: bumpCode('gFbm(vOP * vec3(3.0, 10.0, 3.0), 5) + 0.25 * gNoise(vec3(vOP.y * 42.0, vOP.xz * 1.5))', 0.11),
+        }));
+        cliff.position.y = -H / 2;
+        g.add(cliff);
+        const tipRock = rock(0.5, 2.2, 0x5d4233, 8);
+        tipRock.position.y = -H + 0.15;
+        g.add(tipRock);
 
-        const turf = new THREE.Mesh(new THREE.CylinderGeometry(4.0, 4.15, 0.3, 40), std(0x2c4a3a, { roughness: 1, flatShading: true }));
-        turf.position.y = 0.1;
+        // --- 上面の地面 ---
+        const turfGeo = new THREE.SphereGeometry(4.35, 160, 40, 0, Math.PI * 2, 0, Math.PI / 2);
+        const tp = turfGeo.attributes.position;
+        for (let i = 0; i < tp.count; i++) {
+            const x = tp.getX(i), z = tp.getZ(i);
+            const rr = Math.hypot(x, z) / 4.35;
+            const y = tp.getY(i) * 0.06 + (jsFbm(x * 0.7 + 2, 0, z * 0.7, 4) - 0.5) * 0.4 * (1 - rr * rr * rr) - rr * rr * rr * rr * 0.12;
+            tp.setY(i, y);
+        }
+        turfGeo.computeVertexNormals();
+        const turf = new THREE.Mesh(turfGeo, procedural(std(0xffffff, { roughness: 1, metalness: 0 }), {
+            color: /* glsl */`
+                float tg = gFbm(vOP * 2.4, 5);
+                vec3 grass = mix(vec3(0.035, 0.09, 0.03), vec3(0.15, 0.2, 0.06), tg);
+                grass *= 0.75 + 0.5 * gNoise(vOP * 38.0);
+                diffuseColor.rgb = mix(grass, vec3(0.2, 0.15, 0.1), smoothstep(0.52, 0.7, gFbm(vOP * 0.9 + 4.0, 4)));`,
+            bump: bumpCode('gFbm(vOP * 16.0, 4)', 0.03),
+        }));
         g.add(turf);
 
-        // 鉱物
+        // --- 鉱物 ---
         const under = crystalCluster(9, 1.5);
         under.position.set(1.6, -2.3, 2.2);
         under.rotation.set(1.9, 0, -0.5);
@@ -676,63 +830,112 @@ function start() {
         side.position.set(-2.6, -1.2, 1.9);
         side.rotation.set(1.3, 0, 1.0);
         const top = crystalCluster(5, 0.7);
-        top.position.set(-2.4, 0.2, 1.7);
+        top.position.set(-2.4, 0.25, 1.7);
         g.add(under, side, top);
 
-        // 天体ドーム
+        // --- 天体ドーム ---
         const dome = new THREE.Group();
-        dome.position.set(0.5, 0.25, -0.3);
-        const white = std(0xcfcdc6, { roughness: 0.5, metalness: 0.1 });
-        const wall = new THREE.Mesh(new THREE.CylinderGeometry(1.75, 1.8, 1.4, 48), white);
+        dome.position.set(0.5, 0.2, -0.3);
+        const TAU = 'float a = atan(vOP.z, vOP.x) / 6.2831853;';
+        const wall = new THREE.Mesh(new THREE.CylinderGeometry(1.75, 1.8, 1.4, 96), procedural(std(0xcfcdc6, { roughness: 0.55, metalness: 0.08 }), {
+            // パネルの継ぎ目
+            color: `${TAU} diffuseColor.rgb *= 0.74 + 0.26 * smoothstep(0.0, 0.03, abs(fract(a * 16.0) - 0.5)); diffuseColor.rgb *= 0.9 + 0.1 * gFbm(vOP * 6.0, 4);`,
+        }));
         wall.position.y = 0.7;
-        const ring = new THREE.Mesh(new THREE.CylinderGeometry(1.86, 1.86, 0.14, 48), std(0xe2b23a, { roughness: 0.5 }));
+        const footing = new THREE.Mesh(new THREE.CylinderGeometry(1.95, 2.0, 0.16, 96), std(0x8d8a82, { roughness: 0.9 }));
+        footing.position.y = 0.06;
+        const ring = new THREE.Mesh(new THREE.CylinderGeometry(1.87, 1.87, 0.15, 96), std(0xe2b23a, { roughness: 0.45, metalness: 0.2 }));
         ring.position.y = 1.42;
-        const door = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.9, 0.06), std(0x3a4a5c, { roughness: 0.4, metalness: 0.5 }));
-        door.position.set(0, 0.5, 1.78);
-        dome.add(wall, ring, door);
+        const rivets = new THREE.InstancedMesh(new THREE.SphereGeometry(0.03, 12, 8), std(0x8f7422, { roughness: 0.4, metalness: 0.6 }), 40);
+        const m4 = new THREE.Matrix4();
+        for (let i = 0; i < 40; i++) {
+            const a = i / 40 * Math.PI * 2;
+            rivets.setMatrixAt(i, m4.makeTranslation(Math.cos(a) * 1.875, 1.42, Math.sin(a) * 1.875));
+        }
+        const doorFrame = new THREE.Mesh(new RoundedBoxGeometry(0.62, 1.02, 0.08, 3, 0.03), std(0x9aa0a8, { roughness: 0.4, metalness: 0.6 }));
+        doorFrame.position.set(0, 0.56, 1.76);
+        const door = new THREE.Mesh(new RoundedBoxGeometry(0.5, 0.92, 0.1, 3, 0.02), std(0x2f4156, { roughness: 0.35, metalness: 0.5 }));
+        door.position.set(0, 0.54, 1.77);
+        const porthole = new THREE.Mesh(new THREE.CircleGeometry(0.1, 24), std(0x9fd0ff, { emissive: 0xffd9a0, emissiveIntensity: 0.9, roughness: 0.3 }));
+        porthole.position.set(0, 0.74, 1.83);
+        const step = new THREE.Mesh(new RoundedBoxGeometry(0.8, 0.12, 0.4, 2, 0.03), std(0x8d8a82, { roughness: 0.9 }));
+        step.position.set(0, 0.06, 2.0);
+        dome.add(wall, footing, ring, rivets, doorFrame, door, porthole, step);
 
         const cap = new THREE.Group();
         cap.position.y = 1.48;
         const gap = 0.52;
         const shell = new THREE.Mesh(
-            new THREE.SphereGeometry(1.8, 48, 24, gap / 2, Math.PI * 2 - gap, 0, Math.PI / 2),
-            std(0xd6d6d4, { roughness: 0.38, metalness: 0.3, side: THREE.DoubleSide }),
+            new THREE.SphereGeometry(1.8, 128, 48, gap / 2, Math.PI * 2 - gap, 0, Math.PI / 2),
+            procedural(std(0xd6d6d4, { roughness: 0.36, metalness: 0.32, side: THREE.DoubleSide }), {
+                color: `${TAU} float seam = smoothstep(0.0, 0.035, abs(fract(a * 20.0) - 0.5)) * smoothstep(0.0, 0.03, abs(fract(vOP.y * 2.6) - 0.5)); diffuseColor.rgb *= 0.72 + 0.28 * seam;`,
+            }),
         );
-        const inside = new THREE.Mesh(new THREE.SphereGeometry(1.74, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x05070c, side: THREE.BackSide }));
-        // 屈折望遠鏡（スリットは -X 向き）
+        const inside = new THREE.Mesh(new THREE.SphereGeometry(1.74, 64, 24, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x05070c, side: THREE.BackSide }));
+        // スリットの縁のレール（スリットは -X 向き）
+        const railMat = std(0x8f959c, { roughness: 0.35, metalness: 0.8 });
+        for (const s of [1, -1]) {
+            const rail = new THREE.Mesh(new THREE.TorusGeometry(1.82, 0.04, 10, 64, Math.PI / 2), railMat);
+            rail.rotation.y = Math.PI + s * gap / 2;
+            cap.add(rail);
+        }
+        // 屈折望遠鏡と赤道儀
         const scope = new THREE.Group();
-        scope.position.y = 0.35;
+        scope.position.y = 0.3;
         scope.rotation.z = (90 - 48) * DEG;
-        const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 2.0, 24), std(0xd8d8d8, { roughness: 0.35, metalness: 0.2 }));
+        const tubeMat = std(0xdcdcdc, { roughness: 0.32, metalness: 0.25 });
+        const blackMat = std(0x17191d, { roughness: 0.45, metalness: 0.5 });
+        const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 2.0, 48), tubeMat);
         tube.position.y = 0.6;
-        const hood = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.26, 0.55, 24), std(0xd8d8d8, { roughness: 0.35, metalness: 0.2 }));
+        const hood = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.26, 0.55, 48), tubeMat);
         hood.position.y = 1.75;
-        const lens = new THREE.Mesh(new THREE.CircleGeometry(0.23, 24), std(0x2a5cff, { emissive: 0x4aa0ff, emissiveIntensity: 0.7, roughness: 0.25, metalness: 0.8 }));
+        const lens = new THREE.Mesh(new THREE.CircleGeometry(0.23, 48), std(0x2a5cff, { emissive: 0x4aa0ff, emissiveIntensity: 0.7, roughness: 0.25, metalness: 0.8 }));
         lens.rotation.x = -Math.PI / 2;
         lens.position.y = 2.0;
-        const finder = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.7, 12), std(0xfafafa, { roughness: 0.3 }));
+        const lip = new THREE.Mesh(new THREE.TorusGeometry(0.255, 0.018, 8, 48), blackMat);
+        lip.rotation.x = Math.PI / 2;
+        lip.position.y = 2.02;
+        const focuser = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, 0.4, 24), blackMat);
+        focuser.position.y = -0.55;
+        const eyepiece = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.25, 16), blackMat);
+        eyepiece.position.y = -0.85;
+        const finder = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.7, 20), tubeMat);
         finder.position.set(0, 0.9, 0.3);
-        const mount = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.5, 0.3), std(0x6d7783, { roughness: 0.4, metalness: 0.6 }));
-        mount.position.y = 0.3;
-        scope.add(tube, hood, lens, finder, mount);
-        cap.add(shell, inside, scope);
+        scope.add(tube, hood, lens, lip, focuser, eyepiece, finder);
+        for (const y of [0.25, 0.95]) {
+            const band = new THREE.Mesh(new THREE.TorusGeometry(0.215, 0.03, 10, 40), blackMat);
+            band.rotation.x = Math.PI / 2;
+            band.position.y = y;
+            scope.add(band);
+        }
+        const head = new THREE.Mesh(new RoundedBoxGeometry(0.34, 0.5, 0.34, 3, 0.06), std(0x6d7783, { roughness: 0.4, metalness: 0.6 }));
+        head.position.set(0.3, 0.55, 0);
+        const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.8, 12), railMat);
+        shaft.rotation.z = Math.PI / 2;
+        shaft.position.set(0.8, 0.55, 0);
+        const weight = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.16, 28), blackMat);
+        weight.rotation.z = Math.PI / 2;
+        weight.position.set(1.05, 0.55, 0);
+        scope.add(head, shaft, weight);
+        const pier = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 1.5, 24), std(0x6d7783, { roughness: 0.45, metalness: 0.5 }));
+        pier.position.y = -0.55;
+        cap.add(shell, inside, scope, pier);
         cap.rotation.y = 2.2;
         dome.add(cap);
         g.add(dome);
 
-        // まわりの小石
+        // --- 小石と、まわりに浮く岩片 ---
         for (let i = 0; i < 14; i++) {
-            const a = rand(Math.PI * 2), r = rand(3.6, 2.4);
-            const s = new THREE.Mesh(new THREE.DodecahedronGeometry(rand(0.28, 0.1)), std(bands[i % bands.length], { flatShading: true, roughness: 0.95 }));
-            s.position.set(Math.cos(a) * r, 0.3, Math.sin(a) * r);
+            const a = rand(Math.PI * 2), r = rand(3.6, 2.5);
+            const s = rock(rand(0.26, 0.1), i * 1.7, rockTints[i % rockTints.length], 6);
+            s.position.set(Math.cos(a) * r, 0.22, Math.sin(a) * r);
             s.rotation.set(rand(3), rand(3), rand(3));
             g.add(s);
         }
-        // 浮いている岩片
         const chips = [];
         for (let i = 0; i < 9; i++) {
-            const s = new THREE.Mesh(new THREE.DodecahedronGeometry(rand(0.5, 0.15)), std(bands[(i * 3) % bands.length], { flatShading: true, roughness: 0.95 }));
-            const a = rand(Math.PI * 2), r = rand(7, 4.6);
+            const s = rock(rand(0.55, 0.18), 20 + i * 2.3, rockTints[(i * 3) % rockTints.length], 12);
+            const a = rand(Math.PI * 2), r = rand(7, 4.8);
             s.position.set(Math.cos(a) * r, rand(1, -5), Math.sin(a) * r);
             s.userData = { y: s.position.y, ph: rand(6), sp: rand(0.5, 0.2) };
             chips.push(s);
@@ -753,70 +956,135 @@ function start() {
         const g = new THREE.Group();
         const body = new THREE.Group();
         const R = 0.5, H = 1.9;
-        const pcb = std(0x0c6b3c, { roughness: 0.45, metalness: 0.2 });
-        const metal = std(0xc9d2dc, { roughness: 0.25, metalness: 0.95 });
-        const brass = std(0xd2a84a, { roughness: 0.25, metalness: 1 });
-        for (let i = 0; i < 4; i++) {
-            const deck = new THREE.Mesh(new THREE.CylinderGeometry(R, R, 0.035, 40), pcb);
-            deck.position.y = -H / 2 + (H / 3) * i;
-            body.add(deck);
+        const metal = std(0xc9d2dc, { roughness: 0.28, metalness: 0.95 });
+        const brass = std(0xd2a84a, { roughness: 0.28, metalness: 1 });
+        const black = std(0x14161a, { roughness: 0.4, metalness: 0.4 });
+
+        // 基板：レジストの緑に配線パターン
+        const pcb = procedural(std(0x0c6b3c, { roughness: 0.42, metalness: 0.25 }), {
+            color: /* glsl */`
+                vec2 q = vOP.xz * 22.0;
+                float trace = step(0.86, abs(sin(q.x + sin(q.y * 0.5) * 2.0))) * step(0.3, gNoise(vec3(floor(q * 0.35), 3.0)));
+                float pad = step(0.93, gNoise(vec3(floor(q * 0.9), 7.0))) * step(length(fract(q * 0.9) - 0.5), 0.3);
+                diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.03, 0.34, 0.16), trace);
+                diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.85, 0.66, 0.22), pad);`,
+        });
+        const deckY = [0, 1, 2, 3].map((i) => -H / 2 + (H / 3) * i);
+        for (const y of deckY) {
+            const deck = new THREE.Mesh(new THREE.CylinderGeometry(R, R, 0.036, 96), pcb);
+            deck.position.y = y;
+            const edge = new THREE.Mesh(new THREE.TorusGeometry(R, 0.012, 8, 96), brass);
+            edge.rotation.x = Math.PI / 2;
+            edge.position.y = y;
+            body.add(deck, edge);
         }
+        // 支柱とナット
         for (let i = 0; i < 4; i++) {
             const a = i * Math.PI / 2 + Math.PI / 4;
-            const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, H, 10), metal);
-            pillar.position.set(Math.cos(a) * R * 0.9, 0, Math.sin(a) * R * 0.9);
+            const x = Math.cos(a) * R * 0.86, z = Math.sin(a) * R * 0.86;
+            const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, H + 0.1, 20), metal);
+            pillar.position.set(x, 0, z);
             body.add(pillar);
+            for (const y of deckY) {
+                const nut = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.035, 6), metal);
+                nut.position.set(x, y + 0.035, z);
+                body.add(nut);
+            }
         }
-        // リアクションホイール（3軸）
+        // 基板上の部品
+        const partGeo = new RoundedBoxGeometry(1, 1, 1, 2, 0.12);
+        const parts = [
+            [0.16, 0.05, 0.16, 0.12, 1, 0.15, 0x14161a], [0.24, 0.04, 0.1, -0.18, 1, -0.12, 0x14161a], [0.1, 0.07, 0.2, -0.2, 1, 0.18, 0xe9e4d4],
+            [0.3, 0.05, 0.2, 0.05, 2, -0.1, 0x14161a], [0.12, 0.09, 0.12, 0.24, 2, 0.14, 0xb9bec6], [0.08, 0.05, 0.22, -0.26, 2, 0.02, 0xe9e4d4],
+            [0.2, 0.05, 0.2, -0.1, 3, 0.12, 0x14161a], [0.16, 0.06, 0.08, 0.2, 3, -0.16, 0x1b2a6b],
+        ];
+        for (const [w, h, d, x, deck, z, c] of parts) {
+            const part = new THREE.Mesh(partGeo, std(c, { roughness: 0.45, metalness: c === 0xb9bec6 ? 0.9 : 0.2 }));
+            part.scale.set(w, h, d);
+            part.position.set(x, deckY[deck] + 0.018 + h / 2, z);
+            body.add(part);
+        }
+        // リアクションホイール（3軸）：モータ＋フライホイール
         const wheels = [];
-        const wheelGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.07, 28);
         [[0, 0, 0], [0, 0, Math.PI / 2], [Math.PI / 2, 0, 0]].forEach((rot, i) => {
             const holder = new THREE.Group();
             holder.rotation.set(...rot);
-            holder.position.set([0, 0.22, -0.05][i], [-0.62, 0, 0.02][i], [0, -0.05, 0.22][i]);
-            const w = new THREE.Mesh(wheelGeo, brass);
-            const mark = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.075, 0.04), std(0x222831, { metalness: 0.6, roughness: 0.4 }));
-            w.add(mark);
-            holder.add(w);
+            holder.position.set([0, 0.2, -0.05][i], [-0.62, 0, 0.02][i], [0, -0.05, 0.2][i]);
+            const motor = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.16, 28), metal);
+            motor.position.y = -0.1;
+            const w = new THREE.Group();
+            const rim = new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.035, 14, 56), brass);
+            rim.rotation.x = Math.PI / 2;
+            const web = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.02, 40), brass);
+            const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.08, 20), metal);
+            w.add(rim, web, hub);
+            for (let k = 0; k < 3; k++) {
+                const hole = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.024, 20), black);
+                hole.position.set(Math.cos(k * 2.094) * 0.095, 0, Math.sin(k * 2.094) * 0.095);
+                w.add(hole);
+            }
+            holder.add(motor, w);
             body.add(holder);
             wheels.push(w);
         });
-        // キャパシタ、マイコン、アンテナ
-        const cap1 = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.42, 18), std(0x1b2a6b, { roughness: 0.35, metalness: 0.4 }));
-        cap1.position.set(-0.14, 0.62 - 0.33, 0.12);
-        const chip = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.05, 0.24), std(0x10131a, { roughness: 0.3, metalness: 0.5 }));
-        chip.position.set(0.05, 0.36, -0.1);
-        const led = new THREE.Mesh(new THREE.SphereGeometry(0.03, 10, 8), new THREE.MeshBasicMaterial({ color: new THREE.Color(0.4, 3, 0.8) }));
-        led.position.set(0.25, 0.38, 0.12);
-        const antenna = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.7, 6), metal);
+        // キャパシタ、LED、アンテナ、配線
+        const cap1 = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.42, 32), std(0x1b2a6b, { roughness: 0.35, metalness: 0.4 }));
+        cap1.position.set(-0.14, deckY[2] + 0.23, -0.14);
+        const capTop = new THREE.Mesh(new THREE.CylinderGeometry(0.105, 0.105, 0.01, 32), metal);
+        capTop.position.set(-0.14, deckY[2] + 0.445, -0.14);
+        const led = new THREE.Mesh(new THREE.SphereGeometry(0.03, 16, 12), new THREE.MeshBasicMaterial({ color: new THREE.Color(0.4, 3, 0.8) }));
+        led.position.set(0.25, deckY[3] + 0.05, 0.12);
+        const antenna = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.7, 8), metal);
         antenna.position.set(0.3, H / 2 + 0.35, 0);
-        body.add(cap1, chip, led, antenna);
-        // 太陽電池パネル
-        const cell = std(0x16308a, { roughness: 0.24, metalness: 0.75, envMapIntensity: 3 });
+        const antTip = new THREE.Mesh(new THREE.SphereGeometry(0.02, 12, 8), metal);
+        antTip.position.set(0.3, H / 2 + 0.7, 0);
+        body.add(cap1, capTop, led, antenna, antTip);
+        [[0xd23b2e, 0.32, 0.1], [0x1b1b1b, 0.3, -0.06], [0xe6c229, -0.34, 0.08]].forEach(([c, x, z], i) => {
+            const curve = new THREE.CatmullRomCurve3([
+                V(x * 0.7, deckY[0] + 0.03, z), V(x * 1.15, deckY[1] - 0.1, z * 1.6), V(x * 1.1, deckY[2] + 0.1, z * 0.4 + 0.1 * i), V(x * 0.6, deckY[3] - 0.02, z),
+            ]);
+            body.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 48, 0.012, 8), std(c, { roughness: 0.6 })));
+        });
+        // 太陽電池パネル：セルの格子
+        const cell = procedural(std(0x16308a, { roughness: 0.24, metalness: 0.75, envMapIntensity: 3 }), {
+            color: /* glsl */`
+                vec2 cq = vec2(vOP.z * 9.0, vOP.y * 5.2);
+                float grid = smoothstep(0.03, 0.08, 1.0 - abs(fract(cq.x) - 0.5) * 2.0) * smoothstep(0.03, 0.08, 1.0 - abs(fract(cq.y) - 0.5) * 2.0);
+                float finger = 0.9 + 0.1 * step(0.5, fract(vOP.y * 60.0));
+                diffuseColor.rgb = mix(vec3(0.7, 0.72, 0.76), diffuseColor.rgb * finger, grid);`,
+        });
         for (const a of [0, Math.PI]) {
-            const panel = new THREE.Mesh(new THREE.BoxGeometry(0.02, H * 0.9, 0.4), cell);
+            const panel = new THREE.Mesh(new RoundedBoxGeometry(0.02, H * 0.9, 0.4, 2, 0.008), cell);
             panel.position.set(Math.cos(a) * (R + 0.02), 0, Math.sin(a) * (R + 0.02));
             panel.rotation.y = -a;
             body.add(panel);
         }
         g.add(body);
 
-        // パラシュート
-        const chuteGeo = new THREE.SphereGeometry(1.5, 12, 6, 0, Math.PI * 2, 0, Math.PI * 0.42).toNonIndexed();
+        // パラシュート：12枚のゴアがふくらむ
+        const TH = Math.PI * 0.42, CR = 1.5;
+        const chuteGeo = new THREE.SphereGeometry(CR, 144, 40, 0, Math.PI * 2, 0.07, TH - 0.07);
         const cp = chuteGeo.attributes.position;
-        const cc = new Float32Array(cp.count * 3);
-        const A = new THREE.Color(0xff6a1f), B = new THREE.Color(0xf6f3ea);
-        for (let i = 0; i < cp.count; i += 3) {
-            const a = Math.atan2((cp.getZ(i) + cp.getZ(i + 1) + cp.getZ(i + 2)) / 3, (cp.getX(i) + cp.getX(i + 1) + cp.getX(i + 2)) / 3) + Math.PI;
-            const col = Math.floor(a / (Math.PI * 2 / 12) + 0.001) % 2 ? A : B;
-            for (let j = 0; j < 3; j++) cc.set([col.r, col.g, col.b], (i + j) * 3);
+        for (let i = 0; i < cp.count; i++) {
+            const x = cp.getX(i), y = cp.getY(i), z = cp.getZ(i);
+            const ph = Math.atan2(z, x);
+            const th = Math.acos(Math.min(1, y / CR));
+            const k = 1 + 0.07 * Math.pow(Math.abs(Math.sin(ph * 6)), 0.7) * Math.sin(th / TH * Math.PI * 0.5);
+            cp.setXYZ(i, x * k, y * (1 + (k - 1) * 0.5), z * k);
         }
-        chuteGeo.setAttribute('color', new THREE.BufferAttribute(cc, 3));
         chuteGeo.computeVertexNormals();
-        const chute = new THREE.Mesh(chuteGeo, std(0xffffff, { vertexColors: true, side: THREE.DoubleSide, roughness: 0.8, flatShading: true }));
+        const chute = new THREE.Mesh(chuteGeo, procedural(std(0xffffff, { side: THREE.DoubleSide, roughness: 0.85, metalness: 0 }), {
+            color: /* glsl */`
+                float ga = atan(vOP.z, vOP.x) / 6.2831853;
+                float gore = step(0.5, fract(ga * 6.0));
+                vec3 cloth = mix(vec3(0.9, 0.88, 0.82), vec3(1.0, 0.2, 0.03), gore);
+                float seam = smoothstep(0.0, 0.025, abs(fract(ga * 12.0 + 0.5) - 0.5));
+                float weave = 0.93 + 0.07 * sin(vOP.y * 260.0) * sin(ga * 1800.0);
+                diffuseColor.rgb = cloth * (0.7 + 0.3 * seam) * weave;`,
+        }));
         chute.position.y = 2.6;
         g.add(chute);
-        const rimY = 2.6 + 1.5 * Math.cos(Math.PI * 0.42), rimR = 1.5 * Math.sin(Math.PI * 0.42);
+        const rimY = 2.6 + CR * Math.cos(TH), rimR = CR * Math.sin(TH);
         const pts = [];
         for (let i = 0; i < 12; i++) {
             const a = i / 12 * Math.PI * 2;
@@ -824,7 +1092,7 @@ function start() {
         }
         const lineGeo = new THREE.BufferGeometry();
         lineGeo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
-        g.add(new THREE.LineSegments(lineGeo, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.45 })));
+        g.add(new THREE.LineSegments(lineGeo, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5 })));
 
         g.userData.tick = [(t, dt) => {
             g.rotation.z = Math.sin(t * 0.6) * 0.16;
@@ -840,71 +1108,126 @@ function start() {
 
     function makeCRT() {
         const g = new THREE.Group();
-        const beige = std(0xd9d1b9, { roughness: 0.62 });
+        // 少し日焼けしたプラスチック
+        const plastic = (c) => procedural(std(c, { roughness: 0.6, metalness: 0 }), {
+            color: 'diffuseColor.rgb *= 0.93 + 0.1 * gFbm(vOP * 2.5, 4);',
+        });
+        const beige = plastic(0xd9d1b9);
         const dark = std(0x23262b, { roughness: 0.5 });
+
         // 画面：あのスクリーンセーバー
+        const CW = 640, CH = 480;
         const cv = document.createElement('canvas');
-        cv.width = 320; cv.height = 240;
+        cv.width = CW; cv.height = CH;
         const ctx = cv.getContext('2d');
         const tex = new THREE.CanvasTexture(cv);
         tex.colorSpace = THREE.SRGBColorSpace;
+        tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+        const lines = document.createElement('canvas');
+        lines.width = 4; lines.height = 4;
+        const lg = lines.getContext('2d');
+        lg.fillStyle = 'rgba(0,0,0,.22)';
+        lg.fillRect(0, 2, 4, 2);
+        const scan = ctx.createPattern(lines, 'repeat');
         const draw = (t) => {
             ctx.setTransform(1, 0, 0, 1, 0, 0);
             ctx.fillStyle = '#000';
-            ctx.fillRect(0, 0, 320, 240);
-            const x = 160 + Math.sin(t * 0.43) * 62, y = 120 + Math.sin(t * 0.61 + 1) * 62;
-            const turn = Math.cos(t * 1.1);
-            ctx.font = '900 38px "Zen Kaku Gothic New", "Hiragino Kaku Gothic ProN", sans-serif';
+            ctx.fillRect(0, 0, CW, CH);
+            const x = CW / 2 + Math.sin(t * 0.43) * 120, y = CH / 2 + Math.sin(t * 0.61 + 1) * 130;
+            const turn = Math.cos(t * 1.1), side = Math.sin(t * 1.1);
+            ctx.font = '900 76px "Zen Kaku Gothic New", "Hiragino Kaku Gothic ProN", sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             const hue = (t * 40) % 360;
-            for (let i = 7; i >= 0; i--) {
-                ctx.setTransform(turn, 0, 0.12 * Math.sin(t * 1.1), 1, x + i * 0.9 * Math.sin(t * 1.1), y + i * 0.5);
-                ctx.fillStyle = i ? `hsl(${hue} 80% ${14 + (7 - i) * 3}%)` : `hsl(${hue} 90% 68%)`;
+            for (let i = 18; i >= 0; i--) {
+                ctx.setTransform(turn, 0, 0.12 * side, 1, x + i * 0.8 * side, y + i * 0.45);
+                ctx.fillStyle = i ? `hsl(${hue} 80% ${12 + (18 - i) * 1.6}%)` : `hsl(${hue} 90% 68%)`;
                 ctx.fillText('マルチな部活', 0, 0);
             }
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.fillStyle = scan;
+            ctx.fillRect(0, 0, CW, CH);
             tex.needsUpdate = true;
         };
         draw(0);
 
         const monitor = new THREE.Group();
-        const front = new THREE.Mesh(new THREE.BoxGeometry(2.5, 2.1, 0.9), beige);
+        const front = new THREE.Mesh(new RoundedBoxGeometry(2.5, 2.1, 0.9, 6, 0.14), beige);
         front.position.z = 0.35;
-        const back = new THREE.Mesh(new THREE.BoxGeometry(1.9, 1.7, 1.4), beige);
+        const back = new THREE.Mesh(new RoundedBoxGeometry(1.9, 1.7, 1.5, 6, 0.3), beige);
         back.position.z = -0.75;
-        const bezel = new THREE.Mesh(new THREE.BoxGeometry(2.15, 1.7, 0.06), dark);
-        bezel.position.set(0, 0.08, 0.8);
-        const screen = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 1.5), new THREE.MeshBasicMaterial({ map: tex, color: new THREE.Color(1.35, 1.35, 1.35) }));
-        screen.position.set(0, 0.08, 0.84);
-        const power = new THREE.Mesh(new THREE.SphereGeometry(0.035, 10, 8), new THREE.MeshBasicMaterial({ color: new THREE.Color(0.5, 3, 0.6) }));
+        const bezel = new THREE.Mesh(new RoundedBoxGeometry(2.16, 1.7, 0.08, 4, 0.06), dark);
+        bezel.position.set(0, 0.08, 0.78);
+        // ブラウン管らしく、わずかにふくらんだ画面
+        const screenGeo = new THREE.PlaneGeometry(2.0, 1.5, 32, 24);
+        const sp = screenGeo.attributes.position;
+        for (let i = 0; i < sp.count; i++) {
+            const x = sp.getX(i), y = sp.getY(i);
+            sp.setZ(i, 0.05 * (1 - 0.5 * (x * x + (y / 0.75) * (y / 0.75))));
+        }
+        screenGeo.computeVertexNormals();
+        const screen = new THREE.Mesh(screenGeo, new THREE.MeshBasicMaterial({ map: tex, color: new THREE.Color(1.35, 1.35, 1.35) }));
+        screen.position.set(0, 0.08, 0.83);
+        const power = new THREE.Mesh(new THREE.SphereGeometry(0.035, 16, 12), new THREE.MeshBasicMaterial({ color: new THREE.Color(0.5, 3, 0.6) }));
         power.position.set(0.95, -0.9, 0.81);
-        const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.75, 0.3, 28), beige);
+        monitor.add(front, back, bezel, screen, power);
+        for (let i = 0; i < 4; i++) {
+            const knob = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.04, 16), plastic(0xbdb59c));
+            knob.rotation.x = Math.PI / 2;
+            knob.position.set(0.3 + i * 0.14, -0.9, 0.81);
+            monitor.add(knob);
+        }
+        // 上面の放熱スリット
+        const vents = new THREE.InstancedMesh(new THREE.BoxGeometry(1.2, 0.02, 0.05), dark, 9);
+        const m4 = new THREE.Matrix4();
+        for (let i = 0; i < 9; i++) vents.setMatrixAt(i, m4.makeTranslation(0, 0.855, -0.3 - i * 0.12));
+        const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.78, 0.3, 64), beige);
         neck.position.y = -1.2;
-        monitor.add(front, back, bezel, screen, power, neck);
+        monitor.add(vents, neck);
         monitor.position.y = 1.0;
 
-        const pc = new THREE.Mesh(new THREE.BoxGeometry(2.9, 0.62, 2.6), beige);
+        const pc = new THREE.Mesh(new RoundedBoxGeometry(2.9, 0.62, 2.6, 6, 0.06), beige);
         pc.position.y = -0.66;
-        const floppy = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.05, 0.02), dark);
-        floppy.position.set(0.8, -0.58, 1.31);
-        const cd = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.12, 0.02), std(0xbdb59c, { roughness: 0.6 }));
-        cd.position.set(-0.75, -0.55, 1.31);
-        const kb = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.12, 0.9), beige);
+        const floppy = new THREE.Mesh(new RoundedBoxGeometry(0.78, 0.06, 0.03, 2, 0.012), dark);
+        floppy.position.set(0.8, -0.58, 1.3);
+        const eject = new THREE.Mesh(new RoundedBoxGeometry(0.1, 0.05, 0.04, 2, 0.01), plastic(0xbdb59c));
+        eject.position.set(1.1, -0.7, 1.3);
+        const cd = new THREE.Mesh(new RoundedBoxGeometry(0.98, 0.14, 0.03, 2, 0.012), plastic(0xc8c0a8));
+        cd.position.set(-0.75, -0.55, 1.3);
+        const pcLed = new THREE.Mesh(new THREE.SphereGeometry(0.025, 12, 8), new THREE.MeshBasicMaterial({ color: new THREE.Color(2.6, 1.4, 0.2) }));
+        pcLed.position.set(0.1, -0.56, 1.31);
+        const pcBtn = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.04, 24), plastic(0xbdb59c));
+        pcBtn.rotation.x = Math.PI / 2;
+        pcBtn.position.set(0.1, -0.74, 1.31);
+
+        // キーボード（キーは1個ずつ）とマウス
+        const kb = new THREE.Group();
+        kb.add(new THREE.Mesh(new RoundedBoxGeometry(2.6, 0.12, 0.95, 4, 0.04), beige));
+        const cols = 17, rows = 5;
+        const keys = new THREE.InstancedMesh(new RoundedBoxGeometry(0.125, 0.06, 0.125, 2, 0.02), plastic(0xf0ead6), cols * rows);
+        let n = 0;
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+                keys.setMatrixAt(n++, m4.makeTranslation(-1.16 + c * 0.145 + (r % 2) * 0.03, 0.085, -0.3 + r * 0.15));
+            }
+        }
+        kb.add(keys);
         kb.position.set(0, -0.92, 2.2);
         kb.rotation.x = 0.12;
-        const keys = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.05, 0.7), std(0xf0ead6, { roughness: 0.7 }));
-        keys.position.set(0, -0.84, 2.2);
-        keys.rotation.x = 0.12;
-        g.add(monitor, pc, floppy, cd, kb, keys);
+        const mouse = new THREE.Mesh(new THREE.SphereGeometry(0.2, 32, 20), beige);
+        mouse.scale.set(0.8, 0.45, 1.25);
+        mouse.position.set(1.85, -0.9, 2.2);
+        const cable = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([
+            V(1.85, -0.9, 1.97), V(1.9, -0.93, 1.6), V(1.65, -0.95, 1.35), V(1.45, -0.8, 1.25),
+        ]), 40, 0.015, 8), plastic(0xc8c0a8));
+        g.add(monitor, pc, floppy, eject, cd, pcLed, pcBtn, kb, mouse, cable);
         g.scale.setScalar(0.92);
 
-        let acc = 0;
-        g.userData.tick = [(t, dt) => {
+        g.userData.tick = [(t) => {
             g.rotation.y = Math.sin(t * 0.25) * 0.3;
             g.rotation.x = Math.sin(t * 0.33) * 0.06;
             g.position.y = STATIONS.crt.y + Math.sin(t * 0.55) * 0.15;
-            acc += dt;
-            if (acc > 1 / 30) { acc = 0; draw(t); }
+            draw(t);
         }];
         return g;
     }
