@@ -230,8 +230,19 @@ function start() {
         if (wantPos.length() < EARTH_R + 2.4) wantPos.setLength(EARTH_R + 2.4);
     }
 
-    function resize() {
+    // 描画する大きさ。タッチ端末ではブラウザのツールバーが出入りするたびに高さが変わるので、
+    // そのつど描画バッファを作り直さず、いちばん高いときに合わせておく（はみ出た下端は隠れるだけ）
+    let viewW = 0, viewH = 0;
+    function viewport() {
         const w = Math.max(1, innerWidth), h = Math.max(1, innerHeight);
+        if (!coarse || w !== viewW) { viewW = w; viewH = h; return true; }
+        if (h > viewH) { viewH = h; return true; }
+        return false;
+    }
+
+    function resize() {
+        const w = viewW, h = viewH;
+        canvas.style.height = `${h}px`;
         camera.aspect = w / h;
         camera.fov = camera.aspect < 0.85 ? 52 : 40;
         camera.updateProjectionMatrix();
@@ -243,13 +254,15 @@ function start() {
         buildPoses();
         measure();
     }
+    viewport();
     resize();
-    addEventListener('resize', resize);
+    const onResize = () => { if (viewport()) resize(); else measure(); };
+    addEventListener('resize', onResize);
     addEventListener('load', measure);
     new ResizeObserver(measure).observe(document.body);
     addEventListener('pointermove', (e) => {
         pointer.x = e.clientX / innerWidth * 2 - 1;
-        pointer.y = e.clientY / innerHeight * 2 - 1;
+        pointer.y = e.clientY / viewH * 2 - 1;
     }, { passive: true });
 
     // ---------- ループ ----------
@@ -268,6 +281,8 @@ function start() {
 
     function loop() {
         requestAnimationFrame(loop);
+        // resize イベントが来ないブラウザ向けの保険
+        if (innerWidth !== viewW || innerHeight > viewH) onResize();
         const raw = clock.getDelta();
         const dt = Math.min(raw, 0.05);
         const t = reduce ? 8 : clock.elapsedTime;

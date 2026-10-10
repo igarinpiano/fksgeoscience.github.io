@@ -13,6 +13,8 @@
     <link rel="stylesheet" href="style.css" type="text/css">
     <script>
       document.documentElement.classList.add('js');
+      // スマホではツールバーの出し入れで画面の高さが変わる。余白がそれに引きずられないよう、最初の高さを覚えておく
+      document.documentElement.style.setProperty('--vh', window.innerHeight * 0.01 + 'px');
       // XPモードから戻ってきたら、まず起動画面を出す（js/site.js が続きを担当）
       try { if (sessionStorage.getItem('fks-boot')) { sessionStorage.removeItem('fks-boot'); document.documentElement.classList.add('booting'); } } catch (e) {}
     </script>

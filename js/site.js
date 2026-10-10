@@ -6,6 +6,16 @@
     const root = document.documentElement;
     const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
+    // レイアウト用の画面高さ（--vh）。タッチ端末ではツールバーの出し入れによる高さの変化を無視し、
+    // 幅が変わったとき（回転など）だけ取り直す。そうしないとスクロール中に各節の高さが変わって位置が飛ぶ
+    const touch = matchMedia('(pointer: coarse)').matches;
+    let layoutW = innerWidth;
+    addEventListener('resize', () => {
+        if (touch && innerWidth === layoutW) return;
+        layoutW = innerWidth;
+        root.style.setProperty('--vh', `${innerHeight * 0.01}px`);
+    });
+
     // XPモードから戻ってきたときの起動画面
     if (root.classList.contains('booting')) {
         const boot = document.createElement('div');

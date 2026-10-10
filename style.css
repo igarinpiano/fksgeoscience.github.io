@@ -24,6 +24,9 @@
     --spectrum: linear-gradient(90deg, #7a3cff, #3d6bff 18%, #19c8ff 34%, #2fe38a 50%, #f4ef4a 66%, #ff9d2e 82%, #ff3d3d);
 
     --r: 32px;
+    /* 画面高さの1%。スマホのブラウザはツールバーの出し入れで高さが変わるので、
+       読み込み時の値をスクリプトで固定して使う（未設定なら 1vh） */
+    --vh: 1vh;
     --pad: clamp(1.1rem, 4vw, 4.5rem);
     --ease: cubic-bezier(.2, .8, .2, 1);
 }
@@ -290,12 +293,12 @@ main, .footer{ position: relative; z-index: 2; }
 /* ---------- ヒーロー ---------- */
 
 .hero{
-    min-height: 100vh; min-height: 100svh;
+    min-height: calc(var(--vh) * 100);
     display: grid; align-content: end;
-    padding: 8rem var(--pad) clamp(3rem, 9vh, 6rem);
+    padding: 8rem var(--pad) clamp(3rem, calc(var(--vh) * 9), 6rem);
     gap: 1.6rem;
 }
-.hero--sub{ min-height: 78vh; min-height: 78svh; }
+.hero--sub{ min-height: calc(var(--vh) * 78); }
 .hero h1{ font-size: clamp(3.6rem, 15vw, 12rem); }
 .hero--sub h1{ font-size: clamp(2.6rem, 8.5vw, 6.5rem); }
 .hero h1 small{
@@ -326,9 +329,9 @@ main, .footer{ position: relative; z-index: 2; }
 /* ---------- トップ：分野ツアー ---------- */
 
 .stage{
-    min-height: 125vh;
+    min-height: calc(var(--vh) * 125);
     display: grid; align-items: center;
-    padding: 12vh var(--pad);
+    padding: calc(var(--vh) * 12) var(--pad);
 }
 .stage > *{ width: min(100%, 31rem); }
 .stage--right > *{ justify-self: end; }
@@ -384,10 +387,10 @@ main, .footer{ position: relative; z-index: 2; }
 /* ---------- 下層ページ ---------- */
 
 .column{
-    display: grid; gap: clamp(2rem, 9vh, 6rem);
+    display: grid; gap: clamp(2rem, calc(var(--vh) * 9), 6rem);
     width: min(100% - var(--pad) * 2, 47rem);
     margin-inline: var(--pad) auto;
-    padding-bottom: 14vh;
+    padding-bottom: calc(var(--vh) * 14);
 }
 .window{ padding: clamp(1.4rem, 3.4vw, 2.6rem); display: grid; gap: 1.2rem; scroll-margin-top: 6.5rem; }
 .window > h2{
@@ -553,7 +556,7 @@ html.booting::before{ content: ""; position: fixed; inset: 0; z-index: 9998; bac
     .nav__brand span{ display: none; }
     .nav__brand{ padding: .35rem .5rem; }
     .nav__links a{ padding: .5rem .75rem; font-size: .85rem; }
-    .stage{ min-height: 115vh; align-items: end; }
+    .stage{ min-height: calc(var(--vh) * 115); align-items: end; }
     .stage > *, .stage--right > *{ justify-self: center; }
     .column{ margin-inline: auto; }
     .log li{ grid-template-columns: 1fr; gap: 0; }
