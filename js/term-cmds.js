@@ -566,8 +566,48 @@
         [245, USER, 0.1, 3.4, 'planetariumd --dome 3m --room 245'], [600, USER, 0.0, 1.9, 'fukasis-stack --resolution R600'], [678, USER, 1.2, 6.5, 'asicap --camera ASI678MC'],
         [1050, USER, 0.4, 2.2, 'sunspotd --at lunch'], [2025, USER, 0.0, 1.1, 'meteor-watch --visual'], [4126, USER, 0.0, 1.4, '-bash'],
     ];
-    // btop（js/btop.js）も同じ表を使う
-    T.sys = { since: SINCE, procs: PROCS, disks: DISKS };
+    // ---------- 計算機のようす ----------
+    // btop / htop / atop が同じものを見る。負荷は時刻の関数なので、どれで見ても同じ値になり、開く前のぶんもさかのぼれる
+    const hash = (a, b) => { const s = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return s - Math.floor(s); };
+    const noise = (k, t) => { const i = Math.floor(t), f = t - i, u = f * f * (3 - 2 * f); return hash(k, i) * (1 - u) + hash(k, i + 1) * u; };
+    const THREADS = { 150: 2, 245: 4, 600: 6, 678: 3, 2025: 2 };
+    // 長い目で見た平均の負荷（%）。積算の CPU 時間に使う
+    const AVG = { 1: 0.01, 98: 0.005, 150: 0.4, 245: 0.1, 600: 3.7, 678: 3.4, 1050: 0.5, 2025: 1, 4126: 0.01 };
+    function load(pid, ms) {
+        const t = (ms - SINCE) / 1000, d = new Date(ms), hour = d.getHours() + d.getMinutes() / 60, n = noise(pid, t / 2);
+        switch (pid) {
+            case 150: return 0.3 + 0.2 * n;                                 // 赤道儀は追尾しつづける
+            case 245: return 0.2 * n;
+            case 600: return t % 47 < 7 ? 18 + 14 * n : 0;                  // ときどきスペクトルを重ねあわせる
+            case 678: return t % 10 < 2 ? 9 + 6 * n : 1 + 0.5 * n;          // 10 秒ごとにカメラから読み出す
+            case 1050: return hour >= 12.5 && hour < 13.4 ? 5 + 3 * n : 0.1 + 0.3 * n;      // 黒点観測は昼休み
+            case 2025: return hour >= 19 || hour < 4 ? 1.5 + 2 * n + (hash(pid, Math.floor(t / 5)) > 0.9 ? 12 : 0) : 0;     // 流星は夜
+            default: return pid > 4126 ? 2 + 1.5 * n : hash(pid, Math.floor(t / 2)) > 0.95 ? 0.1 : 0;      // 4126 より上は、モニタ自身
+        }
+    }
+    function traffic(ms) {
+        const t = (ms - SINCE) / 1000;
+        return {
+            down: 300 + 2600 * noise(31, t / 3) ** 3 + (hash(32, Math.floor(t / 6)) > 0.88 ? 30000 + 60000 * noise(33, t / 2) : 0),
+            up: 120 + 500 * noise(41, t / 3) ** 2 + (t % 10 < 2 ? 6000 + 3000 * noise(42, t) : 0),       // 撮った画像を送り出す
+        };
+    }
+    const total = (tasks, ms) => Math.min(100, tasks.reduce((sum, p) => sum + load(p.pid, ms), 0.4));
+    T.sys = {
+        since: SINCE, procs: PROCS, disks: DISKS, memK: 100352, nice: {}, noise, load, traffic, total,
+        mem(ms) { const j = Math.round(700 * noise(51, (ms - SINCE) / 20000)); return { used: 65536 + j, available: 31744 - j, cached: 26624 - (j >> 1), free: 8192 - j + (j >> 1) }; },
+        lav(tasks, ms) { let sum = 0; for (let i = 0; i < 12; i++) sum += total(tasks, ms - i * 5000); return 0.39 + sum / 1200; },
+        // プロセスの一覧。pid と cmd は、いま動いているモニタ自身のもの
+        tasks(pid, cmd) {
+            const now = Date.now();
+            return [
+                ...PROCS.map(([id, user, , mem, line]) => ({ pid: id, ppid: id === 1 ? 0 : 1, user, mem, cmd: line, born: id > 4000 ? now - performance.now() : SINCE })),
+                { pid, ppid: 4126, user: USER, mem: 1.3, cmd, born: now },
+            ].map((p) => ({ ...p, name: p.cmd.split(' ')[0].replace(/^-/, '').split('/').pop(), threads: THREADS[p.pid] || 1 }));
+        },
+        cputime: (p, ms) => (AVG[p.pid] ?? 2.7) / 100 * (ms - p.born) / 1000,
+    };
+    T.util.getopt = getopt;
     def('ps', 'ps [aux]', '実行中のプロセスを表示する', (c) => {
         const all = /[aexu]/.test(c.args.join(''));
         if (!all) { c.out('    PID TTY          TIME CMD\n   4126 tty1     00:00:00 bash\n   4127 tty1     00:00:00 ps\n'); return; }

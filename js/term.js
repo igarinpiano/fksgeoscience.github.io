@@ -1,6 +1,6 @@
 // 地学會ターミナル：端末（表示とキー入力）・仮想ファイルシステム・シェル。
 // XPモードのウィンドウ（xp.js）と、ターミナル版（term.htm）の両方から使います。
-// コマンドは js/term-cmds.js、btop は js/btop.js、Vim は js/vim.js が FksTerm に登録します。
+// コマンドは js/term-cmds.js、btop / htop / atop は js/btop.js など、Vim は js/vim.js が FksTerm に登録します。
 (() => {
     'use strict';
 
@@ -34,6 +34,26 @@
             out += cw(ch) === 2 ? `<i>${ch}</i>` : escHtml(ch);
         }
         return out;
+    }
+    // [文字列, クラス] の並びを 1 行ぶんの HTML にする。幅 cols で切り、足りないぶんは空白（fill のクラス）で埋める。
+    // 3 つめに桁数を書いた要素は、文字列をそのまま HTML として入れる
+    function line(segs, cols, fill = '') {
+        let out = '', used = 0;
+        for (const [s, cls = '', raw = 0] of segs) {
+            let part = '';
+            if (raw) { if (used + raw <= cols) { part = s; used += raw; } } else {
+                for (const ch of String(s)) {
+                    const n = cw(ch);
+                    if (used + n > cols) break;
+                    part += n === 2 ? `<i>${ch}</i>` : escHtml(ch);
+                    used += n;
+                }
+            }
+            if (part) out += cls ? `<span class="${cls}">${part}</span>` : part;
+            if (used >= cols) break;
+        }
+        const rest = ' '.repeat(Math.max(0, cols - used));
+        return out + (fill && rest ? `<span class="${fill}">${rest}</span>` : rest);
     }
     const pad = (s, n) => s + ' '.repeat(Math.max(0, n - width(s)));
     const padL = (s, n) => ' '.repeat(Math.max(0, n - width(String(s)))) + s;
@@ -350,6 +370,8 @@
         }
         setCtrl(on) { this.ctrlNext = on; this.keysEl.querySelector('[data-k="ctrl"]').classList.toggle('is-on', on); }
         focus() { this.input.focus({ preventScroll: true }); }
+        // 音のかわりに、画面を一瞬だけ明るくする
+        bell() { if (!matchMedia('(prefers-reduced-motion: reduce)').matches) this.root.animate?.([{ filter: 'brightness(1.8)' }, { filter: 'none' }], { duration: 160 }); }
         placeInput() {
             // 変換中の文字や候補ウィンドウがカーソルの位置に出るよう、入力欄を重ねておく
             const cur = (this.scr ? this.screenEl : this.lineEl).querySelector('.cur');
@@ -372,7 +394,8 @@
                     ev.preventDefault();
                     return this.key({ key: name === '[' ? 'Escape' : name.toLowerCase(), ctrl: name !== '[' });
                 }
-                if (SPECIAL.has(name)) { ev.preventDefault(); ev.stopPropagation(); this.key({ key: name, shift: ev.shiftKey }); }
+                // F1〜F10 は、ほしがる全画面アプリ（htop）が開いているあいだだけ受け取る
+                if (SPECIAL.has(name) || (this.scr?.fkeys && /^F([1-9]|10)$/.test(name))) { ev.preventDefault(); ev.stopPropagation(); this.key({ key: name, shift: ev.shiftKey }); }
             });
             ta.addEventListener('compositionstart', () => { this.composing = true; ta.classList.add('is-ime'); });
             ta.addEventListener('compositionend', () => {
@@ -749,7 +772,7 @@
             '# 地学會ターミナル', '',
             '松本深志高校地学會のホームページの、もうひとつの隠しモードです。', 'このホームディレクトリに、サイトの中身がテキストで置いてあります。', '',
             '    ls -l              何があるか見る', '    cat about.md       地学會について', '    less works.md      つくったもの（q で終了）',
-            '    grep -n FCT-150 *.md', '    vim README.md      このファイルを編集（:q で終了）', '    open about         ふつうのページとして開く', '    btop               計算機のようすを見る（q で終了）', '',
+            '    grep -n FCT-150 *.md', '    vim README.md      このファイルを編集（:q で終了）', '    open about         ふつうのページとして開く', '    btop  htop  atop   計算機のようすを見る（q で終了）', '',
             'あそび:', '    neofetch  fortune  cowsay  sl  cmatrix  mines  saver  m45', '',
             'ほかのモードへ:', '    startx             地学會 XP を起動', '    exit               モダン版にもどる', '',
             '書きかえたファイルは、このブラウザの中に保存されます。', 'コマンドの一覧は help、使いかたは man <コマンド> で。', '',
@@ -786,7 +809,7 @@
     const FksTerm = window.FksTerm = {
         HOME, USER, HOST, E, Interrupt, commands: {}, docs: {}, games: new Set(),
         Terminal, Shell, FS, buildFS,
-        util: { cw, width, cells, ansi, pad, padL, stripAnsi, columns, escHtml },
+        util: { cw, width, cells, ansi, line, pad, padL, stripAnsi, columns, escHtml },
         // container にターミナルを作って、シェルを起動する
         async create(container, opts = {}) {
             const term = new Terminal(container, opts);

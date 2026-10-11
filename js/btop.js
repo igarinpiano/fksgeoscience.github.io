@@ -6,6 +6,7 @@
     const T = window.FksTerm;
     const { HOME, USER } = T;
     const { cw, width, pad, padL, escHtml } = T.util;
+    const { load, traffic, noise } = T.sys;
     const VERSION = '1.4.5';
     const CONF = `${HOME}/.config/btop/btop.conf`;
     const SELF = 4129;
@@ -14,7 +15,6 @@
     const PRESETS = [BOXES, ['cpu', 'proc'], ['cpu', 'mem', 'net']];
     const SORTS = ['pid', 'program', 'arguments', 'threads', 'user', 'memory', 'cpu direct', 'cpu lazy'];
     const SIGNALS = [[1, 'SIGHUP'], [2, 'SIGINT'], [9, 'SIGKILL'], [15, 'SIGTERM'], [18, 'SIGCONT'], [19, 'SIGSTOP']];
-    const THREADS = { 150: 2, 245: 4, 600: 6, 678: 3, 2025: 2 };
     const MEMS = [['used', 'Used', 'Used'], ['available', 'Available', 'Avail'], ['cached', 'Cached', 'Cache'], ['free', 'Free', 'Free']];
     const BOLD = { bold: true };
 
@@ -125,31 +125,6 @@
         }
     }
 
-    // ---------- 計算機のようす ----------
-    // 負荷は時刻の関数にしてあるので、btop を開く前のぶんのグラフも描ける
-    const hash = (a, b) => { const s = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return s - Math.floor(s); };
-    const noise = (k, t) => { const i = Math.floor(t), f = t - i, u = f * f * (3 - 2 * f); return hash(k, i) * (1 - u) + hash(k, i + 1) * u; };
-    function load(pid, ms) {
-        const t = (ms - T.sys.since) / 1000, d = new Date(ms), hour = d.getHours() + d.getMinutes() / 60, n = noise(pid, t / 2);
-        switch (pid) {
-            case 150: return 0.3 + 0.2 * n;                                 // 赤道儀は追尾しつづける
-            case 245: return 0.2 * n;
-            case 600: return t % 47 < 7 ? 18 + 14 * n : 0;                  // ときどきスペクトルを重ねあわせる
-            case 678: return t % 10 < 2 ? 9 + 6 * n : 1 + 0.5 * n;          // 10 秒ごとにカメラから読み出す
-            case 1050: return hour >= 12.5 && hour < 13.4 ? 5 + 3 * n : 0.1 + 0.3 * n;      // 黒点観測は昼休み
-            case 2025: return hour >= 19 || hour < 4 ? 1.5 + 2 * n + (hash(pid, Math.floor(t / 5)) > 0.9 ? 12 : 0) : 0;     // 流星は夜
-            case SELF: return 2 + 1.5 * n;
-            default: return hash(pid, Math.floor(t / 2)) > 0.95 ? 0.1 : 0;
-        }
-    }
-    function traffic(ms) {
-        const t = (ms - T.sys.since) / 1000;
-        return {
-            down: 300 + 2600 * noise(31, t / 3) ** 3 + (hash(32, Math.floor(t / 6)) > 0.88 ? 30000 + 60000 * noise(33, t / 2) : 0),
-            up: 120 + 500 * noise(41, t / 3) ** 2 + (t % 10 < 2 ? 6000 + 3000 * noise(42, t) : 0),       // 撮った画像を送り出す
-        };
-    }
-
     const KEYS = [
         ['Esc, m', 'メニューを開く・閉じる'], ['h, ?', 'このヘルプ'], ['o', '設定'], ['q, Ctrl-C', '終了'],
         ['1 2 3 4', 'cpu / mem / net / proc の箱を出し入れする'], ['p', 'プリセットを切りかえる'], ['+ -', '更新間隔を 100ms ずつ変える'], ['d', 'ディスクの表示を切りかえる'], ['z', '通信量の合計を 0 から数えなおす'],
@@ -202,10 +177,7 @@
             const presetName = () => { const i = PRESETS.findIndex((p) => p.length === ui.boxes.size && p.every((b) => ui.boxes.has(b))); return i < 0 ? '*' : String(i); };
 
             // ---------- 計測 ----------
-            const base = [
-                ...T.sys.procs.map(([pid, user, , mem, cmd]) => ({ pid, ppid: pid === 1 ? 0 : 1, user, mem, cmd, born: pid > 4000 ? t0 - performance.now() : since })),
-                { pid: SELF, ppid: 4126, user: USER, mem: 1.3, cmd: ['btop', ...c.args].join(' '), born: t0 },
-            ].map((p) => ({ ...p, name: p.cmd.split(' ')[0].replace(/^-/, '').split('/').pop(), threads: THREADS[p.pid] || 1 }));
+            const base = T.sys.tasks(SELF, ['btop', ...c.args].join(' '));
             const hist = { cpu: [], temp: [], down: [], up: [], used: [], available: [], cached: [], free: [], proc: new Map(base.map((p) => [p.pid, []])) };
             const now = { list: [], cpu: 0, temp: 0, down: 0, up: 0, mem: {}, lav: 0 };
             const upSec = (t0 - since) / 1000;
@@ -223,8 +195,7 @@
                 const hour = new Date(ms).getHours();
                 now.temp = 27 + now.cpu * 0.25 + (hour >= 9 && hour < 17 ? 5 : 0) + 2 * noise(61, t / 15);
                 Object.assign(now, traffic(ms));
-                const j = Math.round(700 * noise(51, t / 20));
-                now.mem = { used: 65536 + j, available: 31744 - j, cached: 26624 - (j >> 1), free: 8192 - j + (j >> 1) };
+                now.mem = T.sys.mem(ms);
                 push(hist.cpu, now.cpu / 100); push(hist.temp, now.temp / 90); push(hist.down, now.down); push(hist.up, now.up);
                 for (const [k] of MEMS) push(hist[k], now.mem[k] / MEM_K);
                 const recent = hist.cpu.slice(-30);
