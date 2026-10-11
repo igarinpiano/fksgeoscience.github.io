@@ -36,14 +36,18 @@
     }
 
     // 隠しモード（地学會 XP）への入口：フッターの小さな「スタート」と、トップの「マルチな部活」
-    const toXP = () => {
+    const leaveTo = (url) => {
         if (document.querySelector('.crtoff')) return;
         const off = document.createElement('div');
         off.className = 'crtoff';
         off.innerHTML = '<i></i>';
         document.body.append(off);
-        setTimeout(() => { location.href = './xp.htm'; }, reduce ? 150 : 820);
+        setTimeout(() => { location.href = url; }, reduce ? 150 : 820);
     };
+    const toXP = () => leaveTo('./xp.htm');
+    const toTerm = () => leaveTo('./term.htm');
+    // もうひとつの隠しモード（ターミナル版）は、フッターの「>_」か Ctrl+Alt+T
+    addEventListener('keydown', (ev) => { if (ev.ctrlKey && ev.altKey && ev.code === 'KeyT') { ev.preventDefault(); toTerm(); } });
     // 「戻る」で帰ってきたときに、暗転したままにしない
     addEventListener('pageshow', (ev) => { if (ev.persisted) document.querySelector('.crtoff')?.remove(); });
     const meta = document.querySelector('.footer__meta');
@@ -54,7 +58,16 @@
         egg.textContent = 'スタート';
         egg.setAttribute('aria-label', 'なつかしいほうの地学會（XPモード）をひらく');
         egg.addEventListener('click', toXP);
-        meta.append(egg);
+        const tty = document.createElement('button');
+        tty.type = 'button';
+        tty.className = 'egg egg--term';
+        tty.textContent = '>_';
+        tty.setAttribute('aria-label', 'ターミナル版の地学會をひらく');
+        tty.addEventListener('click', toTerm);
+        const eggs = document.createElement('span');
+        eggs.className = 'eggs';
+        eggs.append(egg, tty);
+        meta.append(eggs);
     }
     const crtGif = document.querySelector('.crt img');
     if (crtGif) {

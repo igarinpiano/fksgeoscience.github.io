@@ -1,0 +1,104 @@
+@charset "utf-8";
+
+/* ============================================================
+   地学會ターミナル
+   XPモードのウィンドウと、ターミナル版（term.htm）の両方で使います。
+   ============================================================ */
+
+.term{
+    --tfg: #d5dbe6;
+    --tbg: #0a0d13;
+    position: relative;
+    display: flex; flex-direction: column;
+    width: 100%; height: 100%; min-height: 0;
+    overflow: hidden;
+    background: var(--tbg); color: var(--tfg);
+    font: 16px/1.25 "DotGothic16", "MS Gothic", "Osaka-Mono", "Noto Sans Mono CJK JP", "BIZ UDGothic", monospace;
+    font-variant-ligatures: none; font-feature-settings: normal; letter-spacing: 0;
+    text-align: left; cursor: text;
+    -webkit-user-select: text; user-select: text;
+    -webkit-font-smoothing: antialiased;
+}
+.term__scroll{
+    flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+    padding: 6px 8px;
+    white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-all;
+    scrollbar-width: thin; scrollbar-color: #3a4358 transparent;
+}
+.term__out > div, .term__line{ min-height: 1.25em; }
+.term__screen{ flex: 1; min-height: 0; overflow: hidden; padding: 6px 8px; white-space: pre; }
+.term__screen > div{ height: 1.25em; overflow: hidden; }
+
+/* 全角文字は 2 桁ぶんの箱に入れて、どのフォントでも桁をそろえる */
+.term i{ display: inline-block; width: 2ch; text-align: center; font-style: normal; vertical-align: top; }
+
+.term .cur{ background: var(--tfg); color: var(--tbg); }
+.term.is-focus .cur{ animation: term-blink 1.06s steps(1) infinite; }
+.term:not(.is-focus) .cur{ background: none; color: inherit; box-shadow: inset 0 0 0 1px var(--tfg); }
+@keyframes term-blink{ 50%{ background: rgb(213 219 230 / .25); color: inherit; } }
+
+/* 入力欄はカーソルの位置に重ねてあり、日本語の変換中だけ見える */
+.term__in{
+    position: absolute; left: 0; top: 0; z-index: 2;
+    width: 24em; height: 1.25em; margin: 0; padding: 0;
+    border: 0; outline: 0; resize: none; overflow: hidden;
+    background: transparent; color: transparent; caret-color: transparent;
+    font: inherit; white-space: pre; pointer-events: none;
+}
+.term__in.is-ime{ background: var(--tbg); color: var(--tfg); text-decoration: underline; }
+.term__probe{ position: absolute; left: -99px; top: 0; display: inline-block; visibility: hidden; white-space: pre; }
+
+/* タッチ端末用のキー（Esc や Ctrl がないと vim が使えない） */
+.term__keys{
+    flex: none; display: flex; gap: 4px; padding: 5px 6px;
+    overflow-x: auto; scrollbar-width: none;
+    background: #141924; border-top: 1px solid #2a3142;
+    -webkit-user-select: none; user-select: none;
+}
+.term__keys::-webkit-scrollbar{ display: none; }
+.term__keys button{
+    flex: none; min-width: 42px; height: 34px; padding: 0 9px;
+    border: 1px solid #39425a; border-radius: 6px;
+    background: #222a3b; color: var(--tfg); font: 14px/1 ui-monospace, Menlo, monospace;
+}
+.term__keys button:active, .term__keys button.is-on{ background: var(--tfg); color: var(--tbg); }
+
+/* 色（ANSI 16色） */
+.term .f0{ color: #0a0d13; } .term .f1{ color: #e05561; } .term .f2{ color: #5fb86b; } .term .f3{ color: #d6b25e; }
+.term .f4{ color: #5a8bff; } .term .f5{ color: #c678dd; } .term .f6{ color: #4cc4d6; } .term .f7{ color: #c9d1e0; }
+.term .f8{ color: #6b7489; } .term .f9{ color: #ff7b86; } .term .f10{ color: #8be28f; } .term .f11{ color: #f6e08a; }
+.term .f12{ color: #7fb0ff; } .term .f13{ color: #e39bf5; } .term .f14{ color: #7ae8f5; } .term .f15{ color: #fff; }
+.term .g0{ background: #0a0d13; } .term .g1{ background: #c23a47; } .term .g2{ background: #3f9a4d; } .term .g3{ background: #d6b25e; }
+.term .g4{ background: #3d6be0; } .term .g5{ background: #a955c4; } .term .g6{ background: #2fa3b6; } .term .g7{ background: #c9d1e0; }
+.term .g8{ background: #4a5266; } .term .g9{ background: #ff7b86; } .term .g10{ background: #8be28f; } .term .g11{ background: #f6e08a; }
+.term .g12{ background: #7fb0ff; } .term .g13{ background: #e39bf5; } .term .g14{ background: #7ae8f5; } .term .g15{ background: #fff; }
+/* 太字は字幅を変えずに表現する（桁がずれないように） */
+.term .bo{ text-shadow: .6px 0 0 currentColor; }
+.term .di{ opacity: .6; }
+.term .ul{ text-decoration: underline; }
+.term .it{ font-style: italic; }
+.term .iv{ background: var(--tfg); color: var(--tbg); }
+
+/* ---------- ターミナル版（全画面） ---------- */
+
+html.tty, .tty body{ height: 100%; margin: 0; background: #05070b; overflow: hidden; }
+.tty__term{ position: fixed; inset: 0; height: var(--tty-h, 100dvh); padding: max(6px, env(safe-area-inset-top)) max(4px, env(safe-area-inset-right)) 0 max(4px, env(safe-area-inset-left)); }
+.tty .term{ --tbg: #05070b; text-shadow: 0 0 6px rgb(160 200 255 / .28); }
+.tty .term .bo{ text-shadow: .6px 0 0 currentColor, 0 0 6px rgb(160 200 255 / .28); }
+/* ブラウン管ふうの走査線と、四隅の暗がり */
+.tty__glass{
+    position: fixed; inset: 0; z-index: 5; pointer-events: none;
+    background:
+        repeating-linear-gradient(180deg, rgb(0 0 0 / 0) 0 2px, rgb(0 0 0 / .16) 2px 3px),
+        radial-gradient(120% 90% at 50% 50%, transparent 60%, rgb(0 0 0 / .5));
+}
+.tty.is-off .tty__term{ visibility: hidden; }
+.tty__note{ position: fixed; inset: 0; display: grid; place-items: center; color: #d5dbe6; font: 16px/1.8 monospace; text-align: center; }
+.tty__note a{ color: #7ae8f5; }
+
+@media (max-width: 520px){
+    .term{ font-size: 14px; }
+}
+@media (prefers-reduced-motion: reduce){
+    .term.is-focus .cur{ animation: none; }
+}

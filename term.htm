@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ja" class="tty">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+    <title>fks@dome: ~ | 松本深志高校地学會のホームページ</title>
+    <meta name="description" content="松本深志高校地学會のホームページの隠しモード。コマンドで地学會を見てまわれるターミナル版です。">
+    <meta name="robots" content="noindex">
+    <meta name="theme-color" content="#05070b">
+    <link rel="shortcut icon" href="favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="term.css" type="text/css">
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NJ1BKL1EBQ"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-NJ1BKL1EBQ');
+    </script>
+    <script defer src="./js/term.js"></script>
+    <script defer src="./js/term-cmds.js"></script>
+    <script defer src="./js/vim.js"></script>
+    <script defer src="./js/term-page.js"></script>
+</head>
+<body>
+    <main class="tty__term" id="term" aria-label="地学會ターミナル"></main>
+    <div class="tty__glass" aria-hidden="true"></div>
+    <noscript>
+        <p class="tty__note">ターミナル版を起動するには JavaScript が必要です。<br><a href="./index.htm">ふつうのホームページへもどる</a></p>
+    </noscript>
+</body>
+</html>

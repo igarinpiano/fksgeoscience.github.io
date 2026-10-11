@@ -31,7 +31,8 @@
         '2026年4月にできた最初のデザインを、さらに懐かしいほうへ寄せてみました。',
         '',
         '・「地学會のホームページ」を開くと、あのころの雰囲気のページが読めます。',
-        '・ スタート → 終了オプション から、モダン版にもどれます。',
+        '・ スタート → 終了オプション から、モダン版やターミナル版に切り替えられます。',
+        '・「ターミナル」では、コマンドで地学會を見てまわれます（vim もあります）。',
         '・ しばらく放っておくと、スクリーンセーバーがはじまります。',
         '',
         'なにをするところ？　………さあ？（26年度部長）',
@@ -74,8 +75,9 @@
         welcomeText.textContent = '設定を保存しています...';
         body.className = 'is-welcome';
         await wait(1000);
-        welcomeText.textContent = mode === 'modern' ? 'モダン版を起動しています...' : '地学會 XP を再起動しています...';
+        welcomeText.textContent = mode === 'modern' ? 'モダン版を起動しています...' : mode === 'terminal' ? 'テキスト モードに切り替えています...' : '地学會 XP を再起動しています...';
         await wait(1300);
+        if (mode === 'terminal') { body.className = 'is-off'; location.href = './term.htm'; return; }
         if (mode !== 'modern') return boot();
         // モダン版は、この合図を見て自分の起動画面を出す
         try { sessionStorage.setItem('fks-boot', '1'); } catch { /* 保存できなくても切り替えはできる */ }
@@ -440,6 +442,40 @@
         win.body.addEventListener('click', (ev) => { if (ev.target.closest('[data-ok]')) win.close(); });
     }
 
+    // ================= ターミナル =================
+    // 中身は js/term.js（ターミナル版と共通）。ここでは窓に入れて、XP 側の機能とつなぐ
+
+    function openTerm() {
+        const win = openWindow({ id: 'term', title: 'dome - 地学會ターム VT', icon: 'term', w: 700, h: 470, x: 150, y: 60 });
+        if (!win.fresh) { win.term?.focus(); return; }
+        win.fresh = false;
+        win.body.innerHTML = '<div class="menubar" aria-hidden="true"><span>ファイル(F)</span><span>編集(E)</span><span>設定(S)</span><span>コントロール(O)</span><span>ウィンドウ(W)</span><span>ヘルプ(H)</span></div><div class="termhost"></div>';
+        const host = $('.termhost', win.body);
+        window.FksTerm.create(host, {
+            onExit: () => win.close(),
+            onPower: (kind) => {
+                if (kind === 'startx') return 'X サーバーはすでに動いています（いま見えているデスクトップがそれです）';
+                setTimeout(() => leave(kind === 'console' ? 'terminal' : kind === 'reboot' ? 'restart' : 'modern'), 400);
+                return true;
+            },
+            // open コマンド：ページはブラウザ窓で、写真は画像ビューアで開く
+            onOpen: (target, arg) => {
+                const file = target.split('/').pop();
+                if (PAGES[file]) openBrowser(file);
+                else if (/\.(jpe?g|png|gif)$/i.test(file)) openViewer(0, [{ src: target, label: (arg || file).split('/').pop() }]);
+                else return false;
+                return true;
+            },
+        }).then(({ term, fs, sh }) => {
+            if (!wins.has('term')) return;
+            win.term = term;
+            term.write(`Connecting to dome (192.168.24.5) port 22 ...\n${fs.get('/etc/motd').data}`);
+            sh.loop();
+            term.focus();
+        });
+        win.el.addEventListener('pointerup', () => { if (!String(getSelection())) win.term?.focus(); });
+    }
+
     // ================= マインスイーパ =================
 
     const FACE = {
@@ -554,6 +590,8 @@
         folder: (name) => openFolder(name),
         notepad: openNotepad,
         mine: openMine,
+        term: openTerm,
+        terminal: () => leave('terminal'),
         props: openProps,
         saver: () => startSaver(),
         power: () => showPower(),
@@ -579,8 +617,9 @@
                 ${plain('image', 'ie:fes.htm', 'とんぼ祭')}
                 ${plain('notepad', 'notepad', 'メモ帳')}
                 ${plain('mine', 'mine', 'マインスイーパ')}
+                ${plain('term', 'term', 'ターミナル')}
                 <i class="sm__sep"></i>
-                ${plain('modern', 'power', 'モダン版に切り替え')}
+                ${plain('modern', 'power', 'モダン版・ターミナル版へ')}
             </div>
             <div class="sm__col sm__col--right">
                 ${plain('folder', 'folder:docs', '<b>マイ ドキュメント</b>')}
@@ -624,6 +663,7 @@
         ['pictures', 'folder:pictures', 'マイ ピクチャ'],
         ['notepad', 'notepad', 'はじめにお読みください.txt'],
         ['mine', 'mine', 'マインスイーパ'],
+        ['term', 'term', 'ターミナル'],
         ['saver', 'saver', 'スクリーンセーバー'],
         ['bin', 'folder:bin', 'ごみ箱'],
         ['modern', 'power', 'モダン版へ'],
@@ -665,6 +705,7 @@
             <div class="power__body">
                 <button type="button" data-act="saver">${ico('standby')}<span>スクリーン<br>セーバー</span></button>
                 <button type="button" data-act="modern">${ico('power')}<span>モダン版へ<br>切り替え</span></button>
+                <button type="button" data-act="terminal">${ico('term')}<span>ターミナル版へ<br>切り替え</span></button>
                 <button type="button" data-act="restart">${ico('restart')}<span>再起動</span></button>
             </div>
             <div class="power__foot"><button type="button" class="xbtn" data-act="cancel">キャンセル</button></div>
