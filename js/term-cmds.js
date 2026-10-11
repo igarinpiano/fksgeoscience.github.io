@@ -554,11 +554,11 @@
     def('hostname', 'hostname', 'ホスト名を表示する', (c) => { c.out(`${HOST}\n`); });
     def(['w', 'who'], 'w', 'ログイン中のユーザーを表示する', (c) => { const d = new Date(); c.out(c.name === 'who' ? `${USER}      tty1         ${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())} ${p2(d.getHours())}:${p2(d.getMinutes())}\n` : ` ${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())} up ${upDays()} days,  1 user,  load average: 0.45, 0.31, 0.27\nUSER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT\n${USER}      tty1     地学教室         ${p2(d.getHours())}:${p2(d.getMinutes())}    0.00s  0.04s  0.00s w\n`); });
     def('uname', 'uname [-a]', 'システム情報を表示する', (c) => { const { o } = getopt(c.args); c.out(o.a ? `Linux ${HOST} 6.1.0-fks #1 SMP PREEMPT_DYNAMIC 地学會 6.1.98-1 (2026-04-15) x86_64 GNU/Linux\n` : o.r ? '6.1.0-fks\n' : o.n ? `${HOST}\n` : o.m ? 'x86_64\n' : 'Linux\n'); });
+    const DISKS = [['/dev/dome1', 98e6, 45e6, '/'], ['tmpfs', 49e6, 0, '/tmp'], ['/dev/sda1', 512e3, 126e3, '/mnt/cansat']];
     def('df', 'df [-h]', 'ファイルシステムの使用量を表示する', (c) => {
         const { o } = getopt(c.args);
-        const rows = [['/dev/dome1', 98e6, 45e6, '/'], ['tmpfs', 49e6, 0, '/tmp'], ['/dev/sda1', 512e3, 126e3, '/mnt/cansat']];
         const f = (n) => (o.h ? human(n) : String(Math.round(n / 1024)));
-        c.out(`${pad('ファイルシス', 14)} ${padL(o.h ? 'サイズ' : '1K-ブロック', 11)} ${padL('使用', 7)} ${padL('残り', 7)} 使用% マウント位置\n` + rows.map(([d, s, u, m]) => `${pad(d, 14)} ${padL(f(s), 11)} ${padL(f(u), 7)} ${padL(f(s - u), 7)} ${padL(Math.round(u / s * 100), 4)}% ${m}`).join('\n') + '\n');
+        c.out(`${pad('ファイルシス', 14)} ${padL(o.h ? 'サイズ' : '1K-ブロック', 11)} ${padL('使用', 7)} ${padL('残り', 7)} 使用% マウント位置\n` + DISKS.map(([d, s, u, m]) => `${pad(d, 14)} ${padL(f(s), 11)} ${padL(f(u), 7)} ${padL(f(s - u), 7)} ${padL(Math.round(u / s * 100), 4)}% ${m}`).join('\n') + '\n');
     }, '主記憶 98 MB は、ドームの計算機に入っている OS の名前にちなんでいます。');
     def('free', 'free [-h]', 'メモリの使用量を表示する', (c) => { const { o } = getopt(c.args); const f = (n) => padL(o.h ? `${human(n * 1024)}i` : n, 11); c.out(`               total        used        free      shared  buff/cache   available\nMem:     ${f(100352)} ${f(65536)} ${f(8192)} ${f(512)} ${f(26624)} ${f(31744)}\nSwap:    ${f(0)} ${f(0)} ${f(0)}\n`); });
     const PROCS = [
@@ -566,6 +566,8 @@
         [245, USER, 0.1, 3.4, 'planetariumd --dome 3m --room 245'], [600, USER, 0.0, 1.9, 'fukasis-stack --resolution R600'], [678, USER, 1.2, 6.5, 'asicap --camera ASI678MC'],
         [1050, USER, 0.4, 2.2, 'sunspotd --at lunch'], [2025, USER, 0.0, 1.1, 'meteor-watch --visual'], [4126, USER, 0.0, 1.4, '-bash'],
     ];
+    // btop（js/btop.js）も同じ表を使う
+    T.sys = { since: SINCE, procs: PROCS, disks: DISKS };
     def('ps', 'ps [aux]', '実行中のプロセスを表示する', (c) => {
         const all = /[aexu]/.test(c.args.join(''));
         if (!all) { c.out('    PID TTY          TIME CMD\n   4126 tty1     00:00:00 bash\n   4127 tty1     00:00:00 ps\n'); return; }

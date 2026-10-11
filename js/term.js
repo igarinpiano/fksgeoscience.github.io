@@ -1,6 +1,6 @@
 // 地学會ターミナル：端末（表示とキー入力）・仮想ファイルシステム・シェル。
 // XPモードのウィンドウ（xp.js）と、ターミナル版（term.htm）の両方から使います。
-// コマンドは js/term-cmds.js、Vim は js/vim.js が FksTerm に登録します。
+// コマンドは js/term-cmds.js、btop は js/btop.js、Vim は js/vim.js が FksTerm に登録します。
 (() => {
     'use strict';
 
@@ -306,7 +306,7 @@
 
         // ---------- 全画面アプリ（vim, less など） ----------
         openScreen() {
-            const scr = { onKey: null, onResize: null, cache: [], closed: false };
+            const scr = { onKey: null, onResize: null, onClick: null, onWheel: null, cache: [], closed: false };
             scr.draw = (rows) => {
                 if (scr.closed) return;
                 for (let i = 0; i < this.rows; i++) {
@@ -388,6 +388,13 @@
             ta.addEventListener('focus', () => this.root.classList.add('is-focus'));
             ta.addEventListener('blur', () => this.root.classList.remove('is-focus'));
             this.root.addEventListener('click', (ev) => { if (!ev.target.closest('.term__keys') && !String(getSelection())) this.focus(); });
+            // 全画面アプリへのクリックとホイールは、桁と行に直して渡す（btop の見出しやプロセスの行）
+            this.screenEl.addEventListener('click', (ev) => {
+                if (!this.scr?.onClick || String(getSelection())) return;
+                const cell = this.probe.getBoundingClientRect(), box = this.screenEl.getBoundingClientRect(), cs = getComputedStyle(this.screenEl);
+                this.scr.onClick(Math.floor((ev.clientX - box.left - parseFloat(cs.paddingLeft)) / cell.width), Math.floor((ev.clientY - box.top - parseFloat(cs.paddingTop)) / cell.height));
+            });
+            this.screenEl.addEventListener('wheel', (ev) => { if (this.scr?.onWheel && ev.deltaY) { ev.preventDefault(); this.scr.onWheel(Math.sign(ev.deltaY)); } }, { passive: false });
             this.keysEl.addEventListener('pointerdown', (ev) => {
                 const b = ev.target.closest('[data-k]');
                 if (!b) return;
@@ -742,7 +749,7 @@
             '# 地学會ターミナル', '',
             '松本深志高校地学會のホームページの、もうひとつの隠しモードです。', 'このホームディレクトリに、サイトの中身がテキストで置いてあります。', '',
             '    ls -l              何があるか見る', '    cat about.md       地学會について', '    less works.md      つくったもの（q で終了）',
-            '    grep -n FCT-150 *.md', '    vim README.md      このファイルを編集（:q で終了）', '    open about         ふつうのページとして開く', '',
+            '    grep -n FCT-150 *.md', '    vim README.md      このファイルを編集（:q で終了）', '    open about         ふつうのページとして開く', '    btop               計算機のようすを見る（q で終了）', '',
             'あそび:', '    neofetch  fortune  cowsay  sl  cmatrix  mines  saver  m45', '',
             'ほかのモードへ:', '    startx             地学會 XP を起動', '    exit               モダン版にもどる', '',
             '書きかえたファイルは、このブラウザの中に保存されます。', 'コマンドの一覧は help、使いかたは man <コマンド> で。', '',
